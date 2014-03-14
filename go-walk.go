@@ -17,11 +17,14 @@ func asString(v interface{}) string {
 	}
 }
 
-func getCondition(c interface{}) string {
+func getExpr(c interface{}) string {
 	switch c := c.(type) {
 	case *ast.Ident:
 		// boolean ?
 		return c.Name
+
+        case *ast.UnaryExpr:
+		return fmt.Sprintf("%v%v", c.Op.String(), c.X)
 
 	case *ast.BinaryExpr:
 		return fmt.Sprintf("%v %v %v", c.X, c.Op.String(), c.Y)
@@ -39,6 +42,14 @@ func getType(t interface{}) string {
 	default:
 		return fmt.Sprintf("%#v", t)
 	}
+}
+
+func getExprList(l []ast.Expr) string {
+	exprs := []string{}
+	for _, e := range l {
+                exprs = append(exprs, getExpr(e))
+	}
+	return strings.Join(exprs, ", ")
 }
 
 func getFieldList(l *ast.FieldList, omitempty bool) string {
@@ -121,12 +132,18 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		fmt.Println("//- }")
 
 	case *ast.IfStmt:
-		fmt.Println("//- if (", getCondition(n.Cond), ")")
+		fmt.Println("//- if (", getExpr(n.Cond), ")")
 		w.Visit(n.Body)
 		if n.Else != nil {
 			fmt.Println("//- else")
 			w.Visit(n.Else)
 		}
+
+	case *ast.ReturnStmt:
+		fmt.Println("//- return", getExprList(n.Results))
+
+        case *ast.AssignStmt:
+		fmt.Printf("//- %v %v %v\n", getExprList(n.Lhs), n.Tok.String(), getExprList(n.Rhs))
 
 	default:
 		fmt.Printf("/* %#v */\n", n)
