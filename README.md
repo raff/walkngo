@@ -13,5 +13,5 @@ The '--' tell 'go run' to stop looking for go files, otherwise it gets utterly c
 
 If you build it you can just run:
 
-   go-walk go-source-file.go
+    go-walk go-source-file.go
 
