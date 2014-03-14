@@ -11,43 +11,64 @@ import (
 
 func asString(v interface{}) string {
 	if v != nil {
-		return fmt.Sprintf("%#v", v)
+		return fmt.Sprintf("((( %#v )))", v)
 	} else {
 		return ""
 	}
 }
 
-func getExpr(c interface{}) string {
-	switch c := c.(type) {
-	case *ast.Ident:
-		// boolean ?
-		return c.Name
-
-        case *ast.UnaryExpr:
-		return fmt.Sprintf("%v%v", c.Op.String(), c.X)
-
-	case *ast.BinaryExpr:
-		return fmt.Sprintf("%v %v %v", c.X, c.Op.String(), c.Y)
-
-	default:
-		return fmt.Sprintf("%#v", c)
-	}
-}
-
 func getType(t interface{}) string {
+	if t == nil {
+		return ""
+	}
+
 	switch t := t.(type) {
 	case *ast.Ident:
 		return t.Name
 
+	case *ast.StarExpr:
+		return "*" + getExpr(t.X)
+
+	case *ast.MapType:
+		return fmt.Sprintf("[%s]%s", getExpr(t.Key), getExpr(t.Value))
+
+	case *ast.InterfaceType:
+		return fmt.Sprintf("interface{%s}", getFieldList(t.Methods, true))
+
 	default:
-		return fmt.Sprintf("%#v", t)
+		return fmt.Sprintf("{{{ %#v }}}", t)
+	}
+}
+
+func getExpr(expr interface{}) string {
+	switch expr := expr.(type) {
+	case *ast.Ident:
+		return expr.Name
+
+	case *ast.BasicLit:
+		return fmt.Sprintf("%v", expr.Value)
+
+	case *ast.UnaryExpr:
+		return fmt.Sprintf("%s%s", expr.Op.String(), getExpr(expr.X))
+
+	case *ast.BinaryExpr:
+		return fmt.Sprintf("%s %s %s", getExpr(expr.X), expr.Op.String(), getExpr(expr.Y))
+
+	case *ast.IndexExpr:
+		return fmt.Sprintf("%s[%s]", getExpr(expr.X), getExpr(expr.Index))
+
+	case *ast.SelectorExpr:
+		return fmt.Sprintf("%s.%s", getExpr(expr.X), getExpr(expr.Sel))
+
+	default:
+		return fmt.Sprintf("[[[ %#v ]]]", expr)
 	}
 }
 
 func getExprList(l []ast.Expr) string {
 	exprs := []string{}
 	for _, e := range l {
-                exprs = append(exprs, getExpr(e))
+		exprs = append(exprs, getExpr(e))
 	}
 	return strings.Join(exprs, ", ")
 }
@@ -95,10 +116,10 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 	case *ast.ValueSpec:
 		fmt.Print("//-  ", getNames(n.Names))
 		if n.Type != nil {
-			fmt.Print(" ", asString(n.Type))
+			fmt.Print(" ", getType(n.Type))
 		}
 		if n.Values != nil {
-			fmt.Printf(" = %#v", n.Values)
+			fmt.Print(" = ", getExprList(n.Values))
 		}
 		fmt.Println("")
 
@@ -110,7 +131,7 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		}
 
 	case *ast.TypeSpec:
-		fmt.Println("//-  ", n.Name, asString(n.Type))
+		fmt.Println("//-  ", n.Name, getType(n.Type))
 
 	case *ast.GenDecl:
 		fmt.Println("//-", n.Tok.String(), "{")
@@ -142,7 +163,7 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 	case *ast.ReturnStmt:
 		fmt.Println("//- return", getExprList(n.Results))
 
-        case *ast.AssignStmt:
+	case *ast.AssignStmt:
 		fmt.Printf("//- %v %v %v\n", getExprList(n.Lhs), n.Tok.String(), getExprList(n.Rhs))
 
 	default:
