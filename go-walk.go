@@ -28,6 +28,7 @@ type Printer interface {
 	printImport(name, path string)
 	printType(name, typedef string)
 	printValue(vtype, names, typedef, values string)
+	printFunc(receiver, name, params, results string)
 }
 
 //
@@ -71,6 +72,22 @@ func (p *GoPrinter) printValue(vtype, names, typedef, value string) {
 		fmt.Print(" = ", value)
 	}
 	fmt.Println()
+}
+
+func (p *GoPrinter) printFunc(receiver, name, params, results string) {
+	p.printLevel("func ")
+	if len(receiver) > 0 {
+		fmt.Printf("(%s) ", receiver)
+	}
+	fmt.Printf("%s(%s) ", name, params)
+	if len(results) > 0 {
+		if strings.ContainsAny(results, " ,") {
+			// name type or multiple types
+			fmt.Printf("(%s) ", results)
+		} else {
+			fmt.Print(results, SP)
+		}
+	}
 }
 
 //
@@ -213,7 +230,13 @@ func parseFieldList(l *ast.FieldList, sep string) string {
 	if l != nil {
 		fields := []string{}
 		for _, f := range l.List {
-			fields = append(fields, parseNames(f.Names)+" "+parseExpr(f.Type))
+			field := parseNames(f.Names)
+			if len(field) > 0 {
+				field += " " + parseExpr(f.Type)
+			} else {
+				field = parseExpr(f.Type)
+			}
+			fields = append(fields, field)
 		}
 
 		return strings.Join(fields, sep)
@@ -273,7 +296,7 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 	case *ast.FuncDecl:
 		fmt.Println()
-		w.p.printLevel("func", wrapIf(parseFieldList(n.Recv, ",")), n.Name.String(), "(", parseFieldList(n.Type.Params, ","), ")", wrapIf(parseFieldList(n.Type.Results, ",")))
+		w.p.printFunc(parseFieldList(n.Recv, ","), n.Name.String(), parseFieldList(n.Type.Params, ","), parseFieldList(n.Type.Results, ","))
 		w.Visit(n.Body)
 
 	case *ast.BlockStmt:
