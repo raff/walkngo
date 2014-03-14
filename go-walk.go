@@ -314,7 +314,7 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 			w.Visit(n.Init)
 			fmt.Print("; ")
 		}
-		fmt.Print(parseExpr(n.Cond))
+		fmt.Print(parseExpr(n.Cond), SP)
 		w.Visit(n.Body)
 		if n.Else != nil {
 			w.p.printLevel("else ")
