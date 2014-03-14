@@ -77,12 +77,11 @@ func (p *GoPrinter) printValue(vtype, names, typedef, value string) {
 // identString return the Ident name or ""
 // to use when it's ok to have an empty part (and you don't want to see '<nil>')
 //
-func identString(i *ast.Ident) string {
-	if i == nil {
-		return ""
-	} else {
-		return i.Name
+func identString(i *ast.Ident) (ret string) {
+	if i != nil {
+		ret = i.Name
 	}
+	return
 }
 
 //
@@ -91,6 +90,21 @@ func identString(i *ast.Ident) string {
 func ifTrue(val string, cond bool) (ret string) {
 	if cond {
 		ret = val
+	}
+	return
+}
+
+func exprOr(expr ast.Expr, v string) string {
+	if expr != nil {
+		return parseExpr(expr)
+	} else {
+		return v
+	}
+}
+
+func wrapIf(val string) (ret string) {
+	if len(val) > 0 {
+		ret = fmt.Sprintf("(%s)", val)
 	}
 	return
 }
@@ -120,15 +134,15 @@ func parseExpr(expr interface{}) string {
 
 		// interface{ things }
 	case *ast.InterfaceType:
-		return fmt.Sprintf("interface{%s}", parseFieldList(expr.Methods, true))
+		return fmt.Sprintf("interface{%s}", parseFieldList(expr.Methods, ";"))
 
 		// struct{ things }
 	case *ast.StructType:
-		return fmt.Sprintf("struct{%s}", parseFieldList(expr.Fields, true))
+		return fmt.Sprintf("struct{%s}", parseFieldList(expr.Fields, ";"))
 
 		// (params...) (result)
 	case *ast.FuncType:
-		return fmt.Sprintf("(%s) %s", parseFieldList(expr.Params, false), parseFieldList(expr.Results, true))
+		return fmt.Sprintf("(%s) %s", parseFieldList(expr.Params, ","), wrapIf(parseFieldList(expr.Results, ",")))
 
 		// "thing", 0, true, false, nil
 	case *ast.BasicLit:
@@ -154,6 +168,10 @@ func parseExpr(expr interface{}) string {
 	case *ast.IndexExpr:
 		return fmt.Sprintf("%s[%s]", parseExpr(expr.X), parseExpr(expr.Index))
 
+		// key: value
+	case *ast.KeyValueExpr:
+		return fmt.Sprintf("%s: %s", parseExpr(expr.Key), parseExpr(expr.Value))
+
 		// x[low:hi:max]
 	case *ast.SliceExpr:
 		if expr.Max == nil {
@@ -170,8 +188,16 @@ func parseExpr(expr interface{}) string {
 	case *ast.CallExpr:
 		return fmt.Sprintf("%s(%s%s)", parseExpr(expr.Fun), parseExprList(expr.Args), ifTrue("...", expr.Ellipsis > 0))
 
+		// name.(type)
+	case *ast.TypeAssertExpr:
+		return fmt.Sprintf("%s.(%s)", parseExpr(expr.X), exprOr(expr.Type, "type"))
+
+		// (expr)
+	case *ast.ParenExpr:
+		return fmt.Sprintf("(%s)", parseExpr(expr.X))
+
 	default:
-		return fmt.Sprintf("[[[ %#v ]]]", expr)
+		return fmt.Sprintf("/* %#v */", expr)
 	}
 }
 
@@ -183,18 +209,16 @@ func parseExprList(l []ast.Expr) string {
 	return strings.Join(exprs, ", ")
 }
 
-func parseFieldList(l *ast.FieldList, omitempty bool) string {
+func parseFieldList(l *ast.FieldList, sep string) string {
 	if l != nil {
 		fields := []string{}
 		for _, f := range l.List {
 			fields = append(fields, parseNames(f.Names)+" "+parseExpr(f.Type))
 		}
 
-		return "(" + strings.Join(fields, ", ") + ")"
-	} else if omitempty {
-		return ""
+		return strings.Join(fields, sep)
 	} else {
-		return "()"
+		return ""
 	}
 }
 
@@ -249,7 +273,7 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 	case *ast.FuncDecl:
 		fmt.Println()
-		w.p.printLevel("func", parseFieldList(n.Recv, true), n.Name.String(), parseFieldList(n.Type.Params, false), parseFieldList(n.Type.Results, true))
+		w.p.printLevel("func", wrapIf(parseFieldList(n.Recv, ",")), n.Name.String(), "(", parseFieldList(n.Type.Params, ","), ")", wrapIf(parseFieldList(n.Type.Results, ",")))
 		w.Visit(n.Body)
 
 	case *ast.BlockStmt:
@@ -262,12 +286,63 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.printLevel("}", NL)
 
 	case *ast.IfStmt:
-		w.p.printLevel("if (", parseExpr(n.Cond), ") ")
+		w.p.printLevel("if ")
+		if n.Init != nil {
+			w.Visit(n.Init)
+			fmt.Print("; ")
+		}
+		fmt.Print(parseExpr(n.Cond))
 		w.Visit(n.Body)
 		if n.Else != nil {
 			w.p.printLevel("else ")
 			w.Visit(n.Else)
 		}
+
+	case *ast.ForStmt:
+		w.p.printLevel("for ")
+		if n.Init != nil {
+			w.Visit(n.Init)
+		}
+		if n.Cond != nil || n.Post != nil {
+			fmt.Printf("; ")
+			w.Visit(n.Cond)
+		}
+		if n.Post != nil {
+			fmt.Printf("; ")
+			w.Visit(n.Post)
+		}
+		w.Visit(n.Body)
+
+	case *ast.TypeSwitchStmt:
+		w.p.printLevel("switch ")
+		if n.Init != nil {
+			w.Visit(n.Init)
+			fmt.Println(";")
+		}
+		w.Visit(n.Assign)
+		w.Visit(n.Body)
+
+	case *ast.CaseClause:
+		if len(n.List) > 0 {
+			w.p.printLevel("case", parseExprList(n.List), ":", NL)
+		} else {
+			w.p.printLevel("default:", NL)
+		}
+		w.p.updateLevel(UP)
+		for _, i := range n.Body {
+			w.Visit(i)
+		}
+		w.p.updateLevel(DOWN)
+
+	case *ast.RangeStmt:
+		w.p.printLevel("for", parseExpr(n.Key), ",", parseExpr(n.Value), ":= range", parseExpr(n.X))
+		w.Visit(n.Body)
+
+	case *ast.BranchStmt:
+		w.p.printLevel("continue", identString(n.Label), NL)
+
+	case *ast.DeferStmt:
+		w.p.printLevel("defer", parseExpr(n.Call), NL)
 
 	case *ast.ReturnStmt:
 		w.p.printLevel("return", parseExprList(n.Results), NL)
