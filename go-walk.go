@@ -123,9 +123,9 @@ func (p *GoPrinter) printFor(init, cond, post string) {
 
 	if len(post) > 0 {
 		p.print(";", post)
-	} else {
-		p.print(SP)
 	}
+
+	p.print(SP)
 }
 
 func (p *GoPrinter) printSwitch(init, expr string) {
@@ -150,171 +150,6 @@ func (p *GoPrinter) printElse() {
 
 func (p *GoPrinter) printEmpty() {
 	p.printLevel(";\n")
-}
-
-//
-// identString return the Ident name or ""
-// to use when it's ok to have an empty part (and you don't want to see '<nil>')
-//
-func identString(i *ast.Ident) (ret string) {
-	if i != nil {
-		ret = i.Name
-	}
-	return
-}
-
-//
-// ifTrue retruns the input value if the condition is true, an empty string otherwise
-//
-func ifTrue(val string, cond bool) (ret string) {
-	if cond {
-		ret = val
-	}
-	return
-}
-
-func exprOr(expr ast.Expr, v string) string {
-	if expr != nil {
-		return parseExpr(expr)
-	} else {
-		return v
-	}
-}
-
-func wrapIf(val string) (ret string) {
-	if len(val) > 0 {
-		ret = fmt.Sprintf("(%s)", val)
-	}
-	return
-}
-
-func parseExpr(expr interface{}) string {
-	if expr == nil {
-		return ""
-	}
-
-	switch expr := expr.(type) {
-
-	// a name
-	case *ast.Ident:
-		return expr.Name
-
-		// *thing
-	case *ast.StarExpr:
-		return "*" + parseExpr(expr.X)
-
-		// [len]type
-	case *ast.ArrayType:
-		return fmt.Sprintf("[%s]%s", parseExpr(expr.Len), parseExpr(expr.Elt))
-
-		// [key]value
-	case *ast.MapType:
-		return fmt.Sprintf("[%s]%s", parseExpr(expr.Key), parseExpr(expr.Value))
-
-		// interface{ things }
-	case *ast.InterfaceType:
-		return fmt.Sprintf("interface{%s}", parseFieldList(expr.Methods, ";"))
-
-		// struct{ things }
-	case *ast.StructType:
-		return fmt.Sprintf("struct{%s}", parseFieldList(expr.Fields, ";"))
-
-		// (params...) (result)
-	case *ast.FuncType:
-		return fmt.Sprintf("(%s) %s", parseFieldList(expr.Params, ","), wrapIf(parseFieldList(expr.Results, ",")))
-
-		// "thing", 0, true, false, nil
-	case *ast.BasicLit:
-		return fmt.Sprintf("%v", expr.Value)
-
-		// type{list}
-	case *ast.CompositeLit:
-		return fmt.Sprintf("%s{%s}", parseExpr(expr.Type), parseExprList(expr.Elts))
-
-		// ...type
-	case *ast.Ellipsis:
-		return fmt.Sprintf("...%s", parseExpr(expr.Elt))
-
-		// -3
-	case *ast.UnaryExpr:
-		return fmt.Sprintf("%s%s", expr.Op.String(), parseExpr(expr.X))
-
-		// 3 + 2
-	case *ast.BinaryExpr:
-		return fmt.Sprintf("%s %s %s", parseExpr(expr.X), expr.Op.String(), parseExpr(expr.Y))
-
-		// array[index]
-	case *ast.IndexExpr:
-		return fmt.Sprintf("%s[%s]", parseExpr(expr.X), parseExpr(expr.Index))
-
-		// key: value
-	case *ast.KeyValueExpr:
-		return fmt.Sprintf("%s: %s", parseExpr(expr.Key), parseExpr(expr.Value))
-
-		// x[low:hi:max]
-	case *ast.SliceExpr:
-		if expr.Max == nil {
-			return fmt.Sprintf("%s[%s:%s]", parseExpr(expr.X), parseExpr(expr.Low), parseExpr(expr.High))
-		} else {
-			return fmt.Sprintf("%s[%s:%s:%s]", parseExpr(expr.X), parseExpr(expr.Low), parseExpr(expr.High), parseExpr(expr.Max))
-		}
-
-		// package.member
-	case *ast.SelectorExpr:
-		return fmt.Sprintf("%s.%s", parseExpr(expr.X), parseExpr(expr.Sel))
-
-		// funcname(args)
-	case *ast.CallExpr:
-		return fmt.Sprintf("%s(%s%s)", parseExpr(expr.Fun), parseExprList(expr.Args), ifTrue("...", expr.Ellipsis > 0))
-
-		// name.(type)
-	case *ast.TypeAssertExpr:
-		return fmt.Sprintf("%s.(%s)", parseExpr(expr.X), exprOr(expr.Type, "type"))
-
-		// (expr)
-	case *ast.ParenExpr:
-		return fmt.Sprintf("(%s)", parseExpr(expr.X))
-
-	default:
-		return fmt.Sprintf("/* Expr: %#v */", expr)
-	}
-}
-
-func parseExprList(l []ast.Expr) string {
-	exprs := []string{}
-	for _, e := range l {
-		exprs = append(exprs, parseExpr(e))
-	}
-	return strings.Join(exprs, ", ")
-}
-
-func parseFieldList(l *ast.FieldList, sep string) string {
-	if l != nil {
-		fields := []string{}
-		for _, f := range l.List {
-			field := parseNames(f.Names)
-			if len(field) > 0 {
-				field += " " + parseExpr(f.Type)
-			} else {
-				field = parseExpr(f.Type)
-			}
-			fields = append(fields, field)
-		}
-
-		return strings.Join(fields, sep)
-	} else {
-		return ""
-	}
-}
-
-func parseNames(v []*ast.Ident) string {
-	names := []string{}
-
-	for _, n := range v {
-		names = append(names, n.Name)
-	}
-
-	return strings.Join(names, ", ")
 }
 
 type GoWalker struct {
@@ -352,11 +187,11 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.printImport(identString(n.Name), n.Path.Value)
 
 	case *ast.TypeSpec:
-		w.p.printType(n.Name.String(), parseExpr(n.Type))
+		w.p.printType(n.Name.String(), w.parseExpr(n.Type))
 
 	case *ast.ValueSpec:
 		vtype := (pparent.(*ast.GenDecl)).Tok.String()
-		w.p.printValue(vtype, parseNames(n.Names), parseExpr(n.Type), parseExprList(n.Values))
+		w.p.printValue(vtype, w.parseNames(n.Names), w.parseExpr(n.Type), w.parseExprList(n.Values))
 
 	case *ast.GenDecl:
 		for _, s := range n.Specs {
@@ -364,10 +199,10 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		}
 
 	case *ast.FuncDecl:
-		w.p.printFunc(parseFieldList(n.Recv, ","),
+		w.p.printFunc(w.parseFieldList(n.Recv, ","),
 			n.Name.String(),
-			parseFieldList(n.Type.Params, ","),
-			parseFieldList(n.Type.Results, ","))
+			w.parseFieldList(n.Type.Params, ","),
+			w.parseFieldList(n.Type.Results, ","))
 		w.Visit(n.Body)
 		w.p.print(NL)
 
@@ -381,7 +216,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.printLevel("}")
 
 	case *ast.IfStmt:
-		w.p.printIf(w.BufferVisit(n.Init), parseExpr(n.Cond))
+		w.p.printIf(w.BufferVisit(n.Init), w.parseExpr(n.Cond))
 		w.Visit(n.Body)
 		if n.Else != nil {
 			w.p.printElse()
@@ -390,12 +225,12 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.print(NL)
 
 	case *ast.ForStmt:
-		w.p.printFor(parseExpr(n.Init), parseExpr(n.Cond), parseExpr(n.Post))
+		w.p.printFor(w.BufferVisit(n.Init), w.parseExpr(n.Cond), w.BufferVisit(n.Post))
 		w.Visit(n.Body)
 		w.p.print(NL)
 
 	case *ast.SwitchStmt:
-		w.p.printSwitch(w.BufferVisit(n.Init), parseExpr(n.Tag))
+		w.p.printSwitch(w.BufferVisit(n.Init), w.parseExpr(n.Tag))
 		w.Visit(n.Body)
 		w.p.print(NL)
 
@@ -406,7 +241,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 	case *ast.CaseClause:
 		if len(n.List) > 0 {
-			w.p.printLevel("case", parseExprList(n.List), ":", NL)
+			w.p.printLevel("case", w.parseExprList(n.List), ":", NL)
 		} else {
 			w.p.printLevel("default:", NL)
 		}
@@ -417,7 +252,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.updateLevel(DOWN)
 
 	case *ast.RangeStmt:
-		w.p.printLevel("for", parseExpr(n.Key), ",", parseExpr(n.Value), ":= range", parseExpr(n.X))
+		w.p.printLevel("for", w.parseExpr(n.Key), ",", w.parseExpr(n.Value), ":= range", w.parseExpr(n.X))
 		w.Visit(n.Body)
 		w.p.print(NL)
 
@@ -425,19 +260,25 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.printLevel(n.Tok.String(), identString(n.Label), NL)
 
 	case *ast.DeferStmt:
-		w.p.printLevel("defer", parseExpr(n.Call), NL)
+		w.p.printLevel("defer", w.parseExpr(n.Call), NL)
+
+	case *ast.GoStmt:
+		w.p.printLevel("go", w.parseExpr(n.Call), NL)
 
 	case *ast.ReturnStmt:
-		w.p.printLevel("return", parseExprList(n.Results), NL)
+		w.p.printLevel("return", w.parseExprList(n.Results), NL)
 
 	case *ast.ExprStmt:
-		w.p.printLevel(parseExpr(n.X), NL)
+		w.p.printLevel(w.parseExpr(n.X), NL)
 
 	case *ast.DeclStmt:
 		w.Visit(n.Decl)
 
 	case *ast.AssignStmt:
-		w.p.printLevel(parseExprList(n.Lhs), n.Tok.String(), parseExprList(n.Rhs), NL)
+		w.p.printLevel(w.parseExprList(n.Lhs), n.Tok.String(), w.parseExprList(n.Rhs), NL)
+
+	case *ast.IncDecStmt:
+		w.p.printLevel(w.parseExpr(n.X)+n.Tok.String(), SP)
 
 	case *ast.EmptyStmt:
 		w.p.printEmpty()
@@ -470,6 +311,176 @@ func (w *GoWalker) BufferVisit(node ast.Node) (ret string) {
 	ret = strings.TrimSpace(w.buffer.String())
 	w.buffer.Reset()
 
+	return
+}
+
+func (w *GoWalker) parseExpr(expr interface{}) string {
+	if expr == nil {
+		return ""
+	}
+
+	switch expr := expr.(type) {
+
+	// a name
+	case *ast.Ident:
+		return expr.Name
+
+		// *thing
+	case *ast.StarExpr:
+		return "*" + w.parseExpr(expr.X)
+
+		// [len]type
+	case *ast.ArrayType:
+		return fmt.Sprintf("[%s]%s", w.parseExpr(expr.Len), w.parseExpr(expr.Elt))
+
+		// [key]value
+	case *ast.MapType:
+		return fmt.Sprintf("[%s]%s", w.parseExpr(expr.Key), w.parseExpr(expr.Value))
+
+		// interface{ things }
+	case *ast.InterfaceType:
+		return fmt.Sprintf("interface{%s}", w.parseFieldList(expr.Methods, ";"))
+
+		// struct{ things }
+	case *ast.StructType:
+		return fmt.Sprintf("struct{%s}", w.parseFieldList(expr.Fields, ";"))
+
+		// (params...) (result)
+	case *ast.FuncType:
+		return fmt.Sprintf("(%s) %s", w.parseFieldList(expr.Params, ","), wrapIf(w.parseFieldList(expr.Results, ",")))
+
+		// "thing", 0, true, false, nil
+	case *ast.BasicLit:
+		return fmt.Sprintf("%v", expr.Value)
+
+		// type{list}
+	case *ast.CompositeLit:
+		return fmt.Sprintf("%s{%s}", w.parseExpr(expr.Type), w.parseExprList(expr.Elts))
+
+		// ...type
+	case *ast.Ellipsis:
+		return fmt.Sprintf("...%s", w.parseExpr(expr.Elt))
+
+		// -3
+	case *ast.UnaryExpr:
+		return fmt.Sprintf("%s%s", expr.Op.String(), w.parseExpr(expr.X))
+
+		// 3 + 2
+	case *ast.BinaryExpr:
+		return fmt.Sprintf("%s %s %s", w.parseExpr(expr.X), expr.Op.String(), w.parseExpr(expr.Y))
+
+		// array[index]
+	case *ast.IndexExpr:
+		return fmt.Sprintf("%s[%s]", w.parseExpr(expr.X), w.parseExpr(expr.Index))
+
+		// key: value
+	case *ast.KeyValueExpr:
+		return fmt.Sprintf("%s: %s", w.parseExpr(expr.Key), w.parseExpr(expr.Value))
+
+		// x[low:hi:max]
+	case *ast.SliceExpr:
+		if expr.Max == nil {
+			return fmt.Sprintf("%s[%s:%s]", w.parseExpr(expr.X), w.parseExpr(expr.Low), w.parseExpr(expr.High))
+		} else {
+			return fmt.Sprintf("%s[%s:%s:%s]", w.parseExpr(expr.X), w.parseExpr(expr.Low), w.parseExpr(expr.High), w.parseExpr(expr.Max))
+		}
+
+		// package.member
+	case *ast.SelectorExpr:
+		return fmt.Sprintf("%s.%s", w.parseExpr(expr.X), w.parseExpr(expr.Sel))
+
+		// funcname(args)
+	case *ast.CallExpr:
+		return fmt.Sprintf("%s(%s%s)", w.parseExpr(expr.Fun), w.parseExprList(expr.Args), ifTrue("...", expr.Ellipsis > 0))
+
+		// name.(type)
+	case *ast.TypeAssertExpr:
+		return fmt.Sprintf("%s.(%s)", w.parseExpr(expr.X), w.exprOr(expr.Type, "type"))
+
+		// (expr)
+	case *ast.ParenExpr:
+		return fmt.Sprintf("(%s)", w.parseExpr(expr.X))
+
+		// func(params) (ret) { body }
+	case *ast.FuncLit:
+		/* &ast.FuncLit{Type:(*ast.FuncType)(0x2103115e0), Body:(*ast.BlockStmt)(0x2102ccf90)} */
+		return fmt.Sprintf("func%s %s", w.parseExpr(expr.Type), w.BufferVisit(expr.Body))
+
+	default:
+		return fmt.Sprintf("/* Expr: %#v */", expr)
+	}
+}
+
+func (w *GoWalker) parseExprList(l []ast.Expr) string {
+	exprs := []string{}
+	for _, e := range l {
+		exprs = append(exprs, w.parseExpr(e))
+	}
+	return strings.Join(exprs, ", ")
+}
+
+func (w *GoWalker) parseFieldList(l *ast.FieldList, sep string) string {
+	if l != nil {
+		fields := []string{}
+		for _, f := range l.List {
+			field := w.parseNames(f.Names)
+			if len(field) > 0 {
+				field += " " + w.parseExpr(f.Type)
+			} else {
+				field = w.parseExpr(f.Type)
+			}
+			fields = append(fields, field)
+		}
+
+		return strings.Join(fields, sep)
+	} else {
+		return ""
+	}
+}
+
+func (w *GoWalker) parseNames(v []*ast.Ident) string {
+	names := []string{}
+
+	for _, n := range v {
+		names = append(names, n.Name)
+	}
+
+	return strings.Join(names, ", ")
+}
+
+func (w *GoWalker) exprOr(expr ast.Expr, v string) string {
+	if expr != nil {
+		return w.parseExpr(expr)
+	} else {
+		return v
+	}
+}
+
+//
+// identString return the Ident name or ""
+// to use when it's ok to have an empty part (and you don't want to see '<nil>')
+//
+func identString(i *ast.Ident) (ret string) {
+	if i != nil {
+		ret = i.Name
+	}
+	return
+}
+
+//
+// ifTrue retruns the input value if the condition is true, an empty string otherwise
+//
+func ifTrue(val string, cond bool) (ret string) {
+	if cond {
+		ret = val
+	}
+	return
+}
+
+func wrapIf(val string) (ret string) {
+	if len(val) > 0 {
+		ret = fmt.Sprintf("(%s)", val)
+	}
 	return
 }
 
