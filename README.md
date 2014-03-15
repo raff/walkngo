@@ -11,6 +11,8 @@ The "GoPrinter" module generates a Go source that compile and should work just a
 
 The main program accepts a -c or a -go arguments to select the output.
 
+   walkngo -c walkngo.go
+
 Note:
 =====
 
