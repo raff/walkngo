@@ -308,8 +308,12 @@ func (w *GoWalker) BufferVisit(node ast.Node) (ret string) {
 	w.flush = false
 	w.Visit(node)
 	w.flush = prev
+
 	ret = strings.TrimSpace(w.buffer.String())
-	w.buffer.Reset()
+
+	if w.flush {
+		w.buffer.Reset()
+	}
 
 	return
 }
