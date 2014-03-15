@@ -13,8 +13,12 @@ import (
 
 const (
 	SP = " "
-	SC = ";"
 	NL = "\n"
+
+	COLON  = ","
+	SEMI   = ";"
+	SEMISP = ";" + SP
+	SEMINL = ";" + NL
 
 	UP   = +1
 	DOWN = -1
@@ -64,11 +68,11 @@ func (p *GoPrinter) indent() string {
 }
 
 func (p *GoPrinter) print(values ...string) {
-	fmt.Fprint(p.w, strings.Join(values, " "))
+	fmt.Fprint(p.w, strings.Join(values, SP))
 }
 
 func (p *GoPrinter) printLevel(values ...string) {
-	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "))
+	fmt.Fprint(p.w, p.indent(), strings.Join(values, SP))
 }
 
 func (p *GoPrinter) printPackage(name string) {
@@ -86,12 +90,12 @@ func (p *GoPrinter) printType(name, typedef string) {
 func (p *GoPrinter) printValue(vtype, names, typedef, value string) {
 	p.printLevel(vtype, names)
 	if len(typedef) > 0 {
-		fmt.Fprint(p.w, SP, typedef)
+		p.print(SP, typedef)
 	}
 	if len(value) > 0 {
-		fmt.Fprint(p.w, " = ", value)
+		p.print(" =", value)
 	}
-	fmt.Fprintln(p.w)
+	p.print(NL)
 }
 
 func (p *GoPrinter) printFunc(receiver, name, params, results string) {
@@ -105,7 +109,7 @@ func (p *GoPrinter) printFunc(receiver, name, params, results string) {
 			// name type or multiple types
 			fmt.Fprintf(p.w, "(%s) ", results)
 		} else {
-			fmt.Fprint(p.w, results, SP)
+			p.print(results + SP)
 		}
 	}
 }
@@ -116,13 +120,13 @@ func (p *GoPrinter) printFor(init, cond, post string) {
 		p.print(init)
 	}
 	if len(init) > 0 || len(post) > 0 {
-		p.print("; ")
+		p.print(SEMISP)
 	}
 
 	p.print(cond)
 
 	if len(post) > 0 {
-		p.print(";", post)
+		p.print(SEMI, post)
 	}
 
 	p.print(SP)
@@ -131,7 +135,7 @@ func (p *GoPrinter) printFor(init, cond, post string) {
 func (p *GoPrinter) printSwitch(init, expr string) {
 	p.printLevel("switch ")
 	if len(init) > 0 {
-		p.print(init + "; ")
+		p.print(init + SEMISP)
 	}
 	p.print(expr)
 }
@@ -139,7 +143,7 @@ func (p *GoPrinter) printSwitch(init, expr string) {
 func (p *GoPrinter) printIf(init, cond string) {
 	p.printLevel("if ")
 	if len(init) > 0 {
-		p.print(init + "; ")
+		p.print(init + SEMISP)
 	}
 	p.print(cond, SP)
 }
@@ -149,9 +153,124 @@ func (p *GoPrinter) printElse() {
 }
 
 func (p *GoPrinter) printEmpty() {
-	p.printLevel(";\n")
+	p.printLevel(SEMINL)
 }
 
+//
+// C implement the Printer interface for C programs
+//
+type CPrinter struct {
+	Printer
+
+	level int
+	w     io.Writer
+}
+
+func (p *CPrinter) setWriter(w io.Writer) {
+	p.w = w
+}
+
+func (p *CPrinter) updateLevel(delta int) {
+	p.level += delta
+}
+
+func (p *CPrinter) indent() string {
+	return strings.Repeat("  ", p.level)
+}
+
+func (p *CPrinter) print(values ...string) {
+	fmt.Fprint(p.w, strings.Join(values, SP))
+}
+
+func (p *CPrinter) printLevel(values ...string) {
+	fmt.Fprint(p.w, p.indent(), strings.Join(values, SP))
+}
+
+func (p *CPrinter) printPackage(name string) {
+	p.printLevel("//package", name, NL)
+}
+
+func (p *CPrinter) printImport(name, path string) {
+	p.printLevel("#include", name, path, NL)
+}
+
+func (p *CPrinter) printType(name, typedef string) {
+	p.printLevel("typedef", typedef, name, NL)
+}
+
+func (p *CPrinter) printValue(vtype, names, typedef, value string) {
+	if vtype == "var" {
+		vtype = ""
+	}
+
+	if len(typedef) == 0 {
+		typedef = "void"
+	}
+
+	p.printLevel(vtype, typedef, names)
+
+	if len(value) > 0 {
+		p.print(" =", value)
+	}
+	p.print(NL)
+}
+
+func (p *CPrinter) printFunc(receiver, name, params, results string) {
+	if len(results) == 0 {
+		results = "void"
+	}
+
+	if len(receiver) > 0 {
+		receiver += ", "
+	}
+	fmt.Fprintf(p.w, "%s %s(%s%s) ", results, name, receiver, params)
+}
+
+func (p *CPrinter) printFor(init, cond, post string) {
+	p.printLevel("for ")
+	if len(init) > 0 {
+		p.print(init)
+	}
+	if len(init) > 0 || len(post) > 0 {
+		p.print(SEMISP)
+	}
+
+	p.print(cond)
+
+	if len(post) > 0 {
+		p.print(SEMI, post)
+	}
+
+	p.print(SP)
+}
+
+func (p *CPrinter) printSwitch(init, expr string) {
+	p.printLevel("switch ")
+	if len(init) > 0 {
+		p.print(init + SEMISP)
+	}
+	p.print(expr)
+}
+
+func (p *CPrinter) printIf(init, cond string) {
+	p.printLevel("if ")
+	if len(init) > 0 {
+		p.print(init + SEMISP)
+	}
+	p.print(cond, SP)
+}
+
+func (p *CPrinter) printElse() {
+	p.print(" else ")
+}
+
+func (p *CPrinter) printEmpty() {
+	p.printLevel(SEMINL)
+}
+
+//
+// GoWalker is the context for the AST visitor
+//
 type GoWalker struct {
 	p      Printer
 	parent ast.Node
@@ -199,10 +318,10 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		}
 
 	case *ast.FuncDecl:
-		w.p.printFunc(w.parseFieldList(n.Recv, ","),
+		w.p.printFunc(w.parseFieldList(n.Recv, COLON),
 			n.Name.String(),
-			w.parseFieldList(n.Type.Params, ","),
-			w.parseFieldList(n.Type.Results, ","))
+			w.parseFieldList(n.Type.Params, COLON),
+			w.parseFieldList(n.Type.Results, COLON))
 		w.Visit(n.Body)
 		w.p.print(NL)
 
@@ -252,7 +371,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.updateLevel(DOWN)
 
 	case *ast.RangeStmt:
-		w.p.printLevel("for", w.parseExpr(n.Key), ",", w.parseExpr(n.Value), ":= range", w.parseExpr(n.X))
+		w.p.printLevel("for", w.parseExpr(n.Key), COLON, w.parseExpr(n.Value), ":= range", w.parseExpr(n.X))
 		w.Visit(n.Body)
 		w.p.print(NL)
 
@@ -343,15 +462,15 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// interface{ things }
 	case *ast.InterfaceType:
-		return fmt.Sprintf("interface{%s}", w.parseFieldList(expr.Methods, ";"))
+		return fmt.Sprintf("interface{%s}", w.parseFieldList(expr.Methods, SEMI))
 
 		// struct{ things }
 	case *ast.StructType:
-		return fmt.Sprintf("struct{%s}", w.parseFieldList(expr.Fields, ";"))
+		return fmt.Sprintf("struct{%s}", w.parseFieldList(expr.Fields, SEMI))
 
 		// (params...) (result)
 	case *ast.FuncType:
-		return fmt.Sprintf("(%s) %s", w.parseFieldList(expr.Params, ","), wrapIf(w.parseFieldList(expr.Results, ",")))
+		return fmt.Sprintf("(%s) %s", w.parseFieldList(expr.Params, COLON), wrapIf(w.parseFieldList(expr.Results, COLON)))
 
 		// "thing", 0, true, false, nil
 	case *ast.BasicLit:
@@ -429,7 +548,7 @@ func (w *GoWalker) parseFieldList(l *ast.FieldList, sep string) string {
 		for _, f := range l.List {
 			field := w.parseNames(f.Names)
 			if len(field) > 0 {
-				field += " " + w.parseExpr(f.Type)
+				field += SP + w.parseExpr(f.Type)
 			} else {
 				field = w.parseExpr(f.Type)
 			}
@@ -489,9 +608,21 @@ func wrapIf(val string) (ret string) {
 }
 
 func main() {
+	golang := true
 	args := os.Args[1:] // skip program name
-	if args[0] == "--" {
-		// skip - this is to fool "go run"
+
+	for len(args) > 0 {
+		if args[0] == "--" {
+			// skip - this is to fool "go run"
+
+		} else if args[0] == "-go" {
+			golang = true
+		} else if args[0] == "-c" {
+			golang = false
+		} else {
+			break
+		}
+
 		args = args[1:]
 	}
 
@@ -503,7 +634,13 @@ func main() {
 		return
 	}
 
-	var printer GoPrinter
-	var walker = NewWalker(&printer)
+	var walker *GoWalker
+	if golang {
+		var printer GoPrinter
+		walker = NewWalker(&printer)
+	} else {
+		var printer CPrinter
+		walker = NewWalker(&printer)
+	}
 	ast.Walk(walker, f)
 }
