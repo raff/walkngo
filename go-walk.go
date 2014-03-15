@@ -1,16 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io"
 	"os"
 	"strings"
 )
 
 const (
 	SP = " "
+	SC = ";"
 	NL = "\n"
 
 	UP   = +1
@@ -21,7 +24,9 @@ const (
 // Printer is the interface to be implemented to print a program
 //
 type Printer interface {
+	setWriter(w io.Writer)
 	updateLevel(delta int)
+	print(values ...string)
 	printLevel(values ...string)
 
 	printPackage(name string)
@@ -29,6 +34,11 @@ type Printer interface {
 	printType(name, typedef string)
 	printValue(vtype, names, typedef, values string)
 	printFunc(receiver, name, params, results string)
+	printFor(init, cond, post string)
+	printSwitch(init, expr string)
+	printIf(init, cond string)
+	printElse()
+	printEmpty()
 }
 
 //
@@ -36,7 +46,13 @@ type Printer interface {
 //
 type GoPrinter struct {
 	Printer
+
 	level int
+	w     io.Writer
+}
+
+func (p *GoPrinter) setWriter(w io.Writer) {
+	p.w = w
 }
 
 func (p *GoPrinter) updateLevel(delta int) {
@@ -47,8 +63,12 @@ func (p *GoPrinter) indent() string {
 	return strings.Repeat("  ", p.level)
 }
 
+func (p *GoPrinter) print(values ...string) {
+	fmt.Fprint(p.w, strings.Join(values, " "))
+}
+
 func (p *GoPrinter) printLevel(values ...string) {
-	fmt.Print(p.indent(), strings.Join(values, " "))
+	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "))
 }
 
 func (p *GoPrinter) printPackage(name string) {
@@ -66,28 +86,70 @@ func (p *GoPrinter) printType(name, typedef string) {
 func (p *GoPrinter) printValue(vtype, names, typedef, value string) {
 	p.printLevel(vtype, names)
 	if len(typedef) > 0 {
-		fmt.Print(SP, typedef)
+		fmt.Fprint(p.w, SP, typedef)
 	}
 	if len(value) > 0 {
-		fmt.Print(" = ", value)
+		fmt.Fprint(p.w, " = ", value)
 	}
-	fmt.Println()
+	fmt.Fprintln(p.w)
 }
 
 func (p *GoPrinter) printFunc(receiver, name, params, results string) {
 	p.printLevel("func ")
 	if len(receiver) > 0 {
-		fmt.Printf("(%s) ", receiver)
+		fmt.Fprintf(p.w, "(%s) ", receiver)
 	}
-	fmt.Printf("%s(%s) ", name, params)
+	fmt.Fprintf(p.w, "%s(%s) ", name, params)
 	if len(results) > 0 {
 		if strings.ContainsAny(results, " ,") {
 			// name type or multiple types
-			fmt.Printf("(%s) ", results)
+			fmt.Fprintf(p.w, "(%s) ", results)
 		} else {
-			fmt.Print(results, SP)
+			fmt.Fprint(p.w, results, SP)
 		}
 	}
+}
+
+func (p *GoPrinter) printFor(init, cond, post string) {
+	p.printLevel("for ")
+	if len(init) > 0 {
+		p.print(init)
+	}
+	if len(init) > 0 || len(post) > 0 {
+		p.print("; ")
+	}
+
+	p.print(cond)
+
+	if len(post) > 0 {
+		p.print(";", post)
+	} else {
+		p.print(SP)
+	}
+}
+
+func (p *GoPrinter) printSwitch(init, expr string) {
+	p.printLevel("switch ")
+	if len(init) > 0 {
+		p.print(init + "; ")
+	}
+	p.print(expr)
+}
+
+func (p *GoPrinter) printIf(init, cond string) {
+	p.printLevel("if ")
+	if len(init) > 0 {
+		p.print(init + "; ")
+	}
+	p.print(cond, SP)
+}
+
+func (p *GoPrinter) printElse() {
+	p.print(" else ")
+}
+
+func (p *GoPrinter) printEmpty() {
+	p.printLevel(";\n")
 }
 
 //
@@ -214,7 +276,7 @@ func parseExpr(expr interface{}) string {
 		return fmt.Sprintf("(%s)", parseExpr(expr.X))
 
 	default:
-		return fmt.Sprintf("/* %#v */", expr)
+		return fmt.Sprintf("/* Expr: %#v */", expr)
 	}
 }
 
@@ -258,12 +320,20 @@ func parseNames(v []*ast.Ident) string {
 type GoWalker struct {
 	p      Printer
 	parent ast.Node
+	buffer bytes.Buffer
+	flush  bool
+}
+
+func NewWalker(p Printer) *GoWalker {
+	w := GoWalker{p: p, flush: true}
+	p.setWriter(&w.buffer)
+	return &w
 }
 
 //
 // Implement the Visitor interface for GoWalker
 //
-func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
+func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 	if node == nil {
 		return
 	}
@@ -289,61 +359,50 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.printValue(vtype, parseNames(n.Names), parseExpr(n.Type), parseExprList(n.Values))
 
 	case *ast.GenDecl:
-		fmt.Println()
 		for _, s := range n.Specs {
 			w.Visit(s)
 		}
 
 	case *ast.FuncDecl:
-		fmt.Println()
-		w.p.printFunc(parseFieldList(n.Recv, ","), n.Name.String(), parseFieldList(n.Type.Params, ","), parseFieldList(n.Type.Results, ","))
+		w.p.printFunc(parseFieldList(n.Recv, ","),
+			n.Name.String(),
+			parseFieldList(n.Type.Params, ","),
+			parseFieldList(n.Type.Results, ","))
 		w.Visit(n.Body)
+		w.p.print(NL)
 
 	case *ast.BlockStmt:
-		fmt.Println("{")
+		w.p.print("{\n")
 		w.p.updateLevel(UP)
 		for _, i := range n.List {
 			w.Visit(i)
 		}
 		w.p.updateLevel(DOWN)
-		w.p.printLevel("}", NL)
+		w.p.printLevel("}")
 
 	case *ast.IfStmt:
-		w.p.printLevel("if ")
-		if n.Init != nil {
-			w.Visit(n.Init)
-			fmt.Print("; ")
-		}
-		fmt.Print(parseExpr(n.Cond), SP)
+		w.p.printIf(w.BufferVisit(n.Init), parseExpr(n.Cond))
 		w.Visit(n.Body)
 		if n.Else != nil {
-			w.p.printLevel("else ")
+			w.p.printElse()
 			w.Visit(n.Else)
 		}
+		w.p.print(NL)
 
 	case *ast.ForStmt:
-		w.p.printLevel("for ")
-		if n.Init != nil {
-			w.Visit(n.Init)
-		}
-		if n.Cond != nil || n.Post != nil {
-			fmt.Printf("; ")
-			w.Visit(n.Cond)
-		}
-		if n.Post != nil {
-			fmt.Printf("; ")
-			w.Visit(n.Post)
-		}
+		w.p.printFor(parseExpr(n.Init), parseExpr(n.Cond), parseExpr(n.Post))
 		w.Visit(n.Body)
+		w.p.print(NL)
+
+	case *ast.SwitchStmt:
+		w.p.printSwitch(w.BufferVisit(n.Init), parseExpr(n.Tag))
+		w.Visit(n.Body)
+		w.p.print(NL)
 
 	case *ast.TypeSwitchStmt:
-		w.p.printLevel("switch ")
-		if n.Init != nil {
-			w.Visit(n.Init)
-			fmt.Println(";")
-		}
-		w.Visit(n.Assign)
+		w.p.printSwitch(w.BufferVisit(n.Init), w.BufferVisit(n.Assign))
 		w.Visit(n.Body)
+		w.p.print(NL)
 
 	case *ast.CaseClause:
 		if len(n.List) > 0 {
@@ -360,9 +419,10 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 	case *ast.RangeStmt:
 		w.p.printLevel("for", parseExpr(n.Key), ",", parseExpr(n.Value), ":= range", parseExpr(n.X))
 		w.Visit(n.Body)
+		w.p.print(NL)
 
 	case *ast.BranchStmt:
-		w.p.printLevel("continue", identString(n.Label), NL)
+		w.p.printLevel(n.Tok.String(), identString(n.Label), NL)
 
 	case *ast.DeferStmt:
 		w.p.printLevel("defer", parseExpr(n.Call), NL)
@@ -379,12 +439,37 @@ func (w GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 	case *ast.AssignStmt:
 		w.p.printLevel(parseExprList(n.Lhs), n.Tok.String(), parseExprList(n.Rhs), NL)
 
+	case *ast.EmptyStmt:
+		w.p.printEmpty()
+
 	default:
-		fmt.Printf("/* %#v */\n", n)
+		w.p.print(fmt.Sprintf("/* Node: %#v */\n", n))
 		ret = w
 	}
 
+	w.Flush()
+
 	w.parent = pparent
+	return
+}
+
+func (w *GoWalker) Flush() {
+	if w.flush && w.buffer.Len() > 0 {
+		fmt.Print(w.buffer.String())
+		w.buffer.Reset()
+	}
+}
+
+func (w *GoWalker) BufferVisit(node ast.Node) (ret string) {
+	w.Flush()
+
+	prev := w.flush
+	w.flush = false
+	w.Visit(node)
+	w.flush = prev
+	ret = strings.TrimSpace(w.buffer.String())
+	w.buffer.Reset()
+
 	return
 }
 
@@ -404,6 +489,6 @@ func main() {
 	}
 
 	var printer GoPrinter
-	var walker = GoWalker{&printer, nil}
+	var walker = NewWalker(&printer)
 	ast.Walk(walker, f)
 }
