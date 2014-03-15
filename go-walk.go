@@ -227,21 +227,27 @@ func (p *CPrinter) printFunc(receiver, name, params, results string) {
 }
 
 func (p *CPrinter) printFor(init, cond, post string) {
-	p.printLevel("for ")
-	if len(init) > 0 {
-		p.print(init)
-	}
-	if len(init) > 0 || len(post) > 0 {
-		p.print(SEMISP)
+	onlycond := len(init) == 0 && len(post) == 0
+
+	if len(cond) == 0 {
+		cond = "true"
 	}
 
-	p.print(cond)
+	if onlycond {
+		// make it a while
+		p.printLevel("while (", cond)
+	} else {
+		p.printLevel("for (")
+		if len(init) > 0 {
+			p.print(init)
+		}
+		p.print(SEMISP, cond, SEMISP)
+		if len(post) > 0 {
+			p.print(post)
+		}
 
-	if len(post) > 0 {
-		p.print(SEMI, post)
 	}
-
-	p.print(SP)
+	p.print(")" + SP)
 }
 
 func (p *CPrinter) printSwitch(init, expr string) {
