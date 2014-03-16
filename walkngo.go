@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-    "github.com/raff/walkngo/walker"
-    "github.com/raff/walkngo/printer"
+	"github.com/raff/walkngo/printer"
+	"github.com/raff/walkngo/walker"
 )
 
 func main() {
@@ -35,8 +35,8 @@ func main() {
 		var printer printer.CPrinter
 		walker = walkngo.NewWalker(&printer)
 	}
-	
-    if err := walker.WalkFile(args[0]); err != nil {
-        fmt.Println(err);
-    }
+
+	if err := walker.WalkFile(args[0]); err != nil {
+		fmt.Println(err)
+	}
 }

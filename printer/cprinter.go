@@ -1,10 +1,10 @@
 package printer
 
 import (
-    "fmt"
-    "io"
-    "strings"
-    )
+	"fmt"
+	"io"
+	"strings"
+)
 
 //
 // C implement the Printer interface for C programs
@@ -12,8 +12,9 @@ import (
 type CPrinter struct {
 	Printer
 
-	level int
-	w     io.Writer
+	level    int
+	sameline bool
+	w        io.Writer
 }
 
 func (p *CPrinter) SetWriter(w io.Writer) {
@@ -24,7 +25,16 @@ func (p *CPrinter) UpdateLevel(delta int) {
 	p.level += delta
 }
 
+func (p *CPrinter) SameLine() {
+	p.sameline = true
+}
+
 func (p *CPrinter) indent() string {
+	if p.sameline {
+		p.sameline = false
+		return ""
+	}
+
 	return strings.Repeat("  ", p.level)
 }
 
@@ -63,6 +73,10 @@ func (p *CPrinter) PrintValue(vtype, names, typedef, value string) {
 		p.Print(" =", value)
 	}
 	p.Print("\n")
+}
+
+func (p *CPrinter) PrintStmt(stmt, expr string) {
+	p.PrintLevel(stmt, expr, ";\n")
 }
 
 func (p *CPrinter) PrintFunc(receiver, name, params, results string) {

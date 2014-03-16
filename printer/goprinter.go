@@ -1,11 +1,10 @@
 package printer
 
 import (
-    "fmt"
-    "io"
-    "strings"
-    )
-
+	"fmt"
+	"io"
+	"strings"
+)
 
 //
 // GoPrinter implement the Printer interface for Go programs
@@ -13,8 +12,9 @@ import (
 type GoPrinter struct {
 	Printer
 
-	level int
-	w     io.Writer
+	level    int
+	sameline bool
+	w        io.Writer
 }
 
 func (p *GoPrinter) SetWriter(w io.Writer) {
@@ -25,7 +25,16 @@ func (p *GoPrinter) UpdateLevel(delta int) {
 	p.level += delta
 }
 
+func (p *GoPrinter) SameLine() {
+	p.sameline = true
+}
+
 func (p *GoPrinter) indent() string {
+	if p.sameline {
+		p.sameline = false
+		return ""
+	}
+
 	return strings.Repeat("  ", p.level)
 }
 
@@ -58,6 +67,10 @@ func (p *GoPrinter) PrintValue(vtype, names, typedef, value string) {
 		p.Print(" =", value)
 	}
 	p.Print("\n")
+}
+
+func (p *GoPrinter) PrintStmt(stmt, expr string) {
+	p.PrintLevel(stmt, expr, "\n")
 }
 
 func (p *GoPrinter) PrintFunc(receiver, name, params, results string) {
@@ -117,4 +130,3 @@ func (p *GoPrinter) PrintElse() {
 func (p *GoPrinter) PrintEmpty() {
 	p.PrintLevel(";\n")
 }
-

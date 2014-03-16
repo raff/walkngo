@@ -8,7 +8,7 @@ import (
 	"go/token"
 	"strings"
 
-    "github.com/raff/walkngo/printer"
+	"github.com/raff/walkngo/printer"
 )
 
 //
@@ -36,7 +36,7 @@ func (w *GoWalker) WalkFile(filename string) error {
 	}
 
 	ast.Walk(w, f)
-    return nil
+	return nil
 }
 
 //
@@ -81,7 +81,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.Print("\n")
 
 	case *ast.BlockStmt:
-		w.p.Print("{\n")
+		w.p.PrintLevel("{\n")
 		w.p.UpdateLevel(printer.UP)
 		for _, i := range n.List {
 			w.Visit(i)
@@ -93,6 +93,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.PrintIf(w.BufferVisit(n.Init), w.parseExpr(n.Cond))
 		w.Visit(n.Body)
 		if n.Else != nil {
+			w.p.SameLine()
 			w.p.PrintElse()
 			w.Visit(n.Else)
 		}
@@ -131,16 +132,16 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.Print("\n")
 
 	case *ast.BranchStmt:
-		w.p.PrintLevel(n.Tok.String(), identString(n.Label), "\n")
+		w.p.PrintStmt(n.Tok.String(), identString(n.Label))
 
 	case *ast.DeferStmt:
-		w.p.PrintLevel("defer", w.parseExpr(n.Call), "\n")
+		w.p.PrintStmt("defer", w.parseExpr(n.Call))
 
 	case *ast.GoStmt:
-		w.p.PrintLevel("go", w.parseExpr(n.Call), "\n")
+		w.p.PrintStmt("go", w.parseExpr(n.Call))
 
 	case *ast.ReturnStmt:
-		w.p.PrintLevel("return", w.parseExprList(n.Results), "\n")
+		w.p.PrintStmt("return", w.parseExprList(n.Results))
 
 	case *ast.ExprStmt:
 		w.p.PrintLevel(w.parseExpr(n.X), "\n")
@@ -223,6 +224,17 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 	case *ast.StructType:
 		return fmt.Sprintf("struct{%s}", w.parseFieldList(expr.Fields, "; "))
 
+		// <-chan type
+	case *ast.ChanType:
+		ctype := "chan"
+		if expr.Dir == ast.SEND {
+			ctype = "chan<-"
+		} else if expr.Dir == ast.RECV {
+			ctype = "<-chan"
+		}
+		return fmt.Sprintf("%s %s", ctype, w.parseExpr(expr.Value))
+		break
+
 		// (params...) (result)
 	case *ast.FuncType:
 		return fmt.Sprintf("(%s) %s", w.parseFieldList(expr.Params, ", "), wrapIf(w.parseFieldList(expr.Results, ", ")))
@@ -282,10 +294,9 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 		// func(params) (ret) { body }
 	case *ast.FuncLit:
 		return fmt.Sprintf("func%s %s", w.parseExpr(expr.Type), w.BufferVisit(expr.Body))
-
-	default:
-		return fmt.Sprintf("/* Expr: %#v */", expr)
 	}
+
+	return fmt.Sprintf("/* Expr: %#v */", expr)
 }
 
 func (w *GoWalker) parseExprList(l []ast.Expr) string {
