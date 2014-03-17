@@ -6,6 +6,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io"
 	"strings"
 
 	"github.com/raff/walkngo/printer"
@@ -17,12 +18,13 @@ import (
 type GoWalker struct {
 	p      printer.Printer
 	parent ast.Node
-	buffer bytes.Buffer
 	flush  bool
+	buffer bytes.Buffer
+	writer io.Writer
 }
 
-func NewWalker(p printer.Printer) *GoWalker {
-	w := GoWalker{p: p, flush: true}
+func NewWalker(p printer.Printer, out io.Writer) *GoWalker {
+	w := GoWalker{p: p, flush: true, writer: out}
 	p.SetWriter(&w.buffer)
 	return &w
 }
@@ -171,7 +173,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 func (w *GoWalker) Flush() {
 	if w.flush && w.buffer.Len() > 0 {
-		fmt.Print(w.buffer.String())
+		w.buffer.WriteTo(w.writer)
 		w.buffer.Reset()
 	}
 }

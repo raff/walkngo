@@ -30,10 +30,10 @@ func main() {
 	var walker *walkngo.GoWalker
 	if golang {
 		var printer printer.GoPrinter
-		walker = walkngo.NewWalker(&printer)
+		walker = walkngo.NewWalker(&printer, os.Stdout)
 	} else {
 		var printer printer.CPrinter
-		walker = walkngo.NewWalker(&printer)
+		walker = walkngo.NewWalker(&printer, os.Stdout)
 	}
 
 	if err := walker.WalkFile(args[0]); err != nil {

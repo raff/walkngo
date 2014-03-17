@@ -55,7 +55,7 @@ func (p *CPrinter) PrintImport(name, path string) {
 }
 
 func (p *CPrinter) PrintType(name, typedef string) {
-	p.PrintLevel("typedef", typedef, name, "\n")
+	p.PrintLevel("typedef", typedef, name, ";\n")
 }
 
 func (p *CPrinter) PrintValue(vtype, names, typedef, value string) {
@@ -72,7 +72,7 @@ func (p *CPrinter) PrintValue(vtype, names, typedef, value string) {
 	if len(value) > 0 {
 		p.Print(" =", value)
 	}
-	p.Print("\n")
+	p.Print(";\n")
 }
 
 func (p *CPrinter) PrintStmt(stmt, expr string) {
