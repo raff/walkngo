@@ -93,7 +93,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 	case *ast.IfStmt:
 		w.p.PrintIf(w.BufferVisit(n.Init), w.parseExpr(n.Cond))
-        w.p.SameLine()
+		w.p.SameLine()
 		w.Visit(n.Body)
 		if n.Else != nil {
 			w.p.SameLine()
@@ -118,11 +118,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.Print("\n")
 
 	case *ast.CaseClause:
-		if len(n.List) > 0 {
-			w.p.PrintLevel("case", w.parseExprList(n.List), ":", "\n")
-		} else {
-			w.p.PrintLevel("default:", "\n")
-		}
+		w.p.PrintCase(w.parseExprList(n.List))
 		w.p.UpdateLevel(printer.UP)
 		for _, i := range n.Body {
 			w.Visit(i)
@@ -314,13 +310,8 @@ func (w *GoWalker) parseFieldList(l *ast.FieldList, sep string) string {
 	if l != nil {
 		fields := []string{}
 		for _, f := range l.List {
-			field := w.parseNames(f.Names)
-			if len(field) > 0 {
-				field += " " + w.parseExpr(f.Type)
-			} else {
-				field = w.parseExpr(f.Type)
-			}
-			fields = append(fields, field)
+			field := printer.Pair{w.parseNames(f.Names), w.parseExpr(f.Type)}
+			fields = append(fields, w.p.FormatPair(field))
 		}
 
 		return strings.Join(fields, sep)
@@ -330,10 +321,10 @@ func (w *GoWalker) parseFieldList(l *ast.FieldList, sep string) string {
 }
 
 func (w *GoWalker) parseNames(v []*ast.Ident) string {
-	names := []string{}
+	names := make([]string, len(v))
 
-	for _, n := range v {
-		names = append(names, n.Name)
+	for i, n := range v {
+		names[i] = n.Name
 	}
 
 	return strings.Join(names, ", ")
@@ -368,6 +359,9 @@ func ifTrue(val string, cond bool) (ret string) {
 	return
 }
 
+//
+// if val is not empty it should be wrapped in round brackets
+//
 func wrapIf(val string) (ret string) {
 	if len(val) > 0 {
 		ret = fmt.Sprintf("(%s)", val)

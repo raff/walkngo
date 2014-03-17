@@ -84,7 +84,7 @@ func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
 		results = "void"
 	}
 
-	if len(receiver) > 0 {
+	if len(receiver) > 0 && len(params) > 0 {
 		receiver += ", "
 	}
 	fmt.Fprintf(p.w, "%s %s(%s%s) ", results, name, receiver, params)
@@ -111,7 +111,7 @@ func (p *CPrinter) PrintFor(init, cond, post string) {
 		}
 
 	}
-	p.Print(")" + " ")
+	p.Print(") ")
 }
 
 func (p *CPrinter) PrintSwitch(init, expr string) {
@@ -122,13 +122,21 @@ func (p *CPrinter) PrintSwitch(init, expr string) {
 	p.Print(expr)
 }
 
+func (p *CPrinter) PrintCase(expr string) {
+	if len(expr) > 0 {
+		p.PrintLevel("case", expr+":\n")
+	} else {
+		p.PrintLevel("default:\n")
+	}
+}
+
 func (p *CPrinter) PrintIf(init, cond string) {
 	if len(init) > 0 {
 		p.PrintLevel(init + " if ")
 	} else {
-	    p.PrintLevel("if ")
-    }
-	p.Print(cond, " ")
+		p.PrintLevel("if ")
+	}
+	p.Print(cond, "")
 }
 
 func (p *CPrinter) PrintElse() {
@@ -147,4 +155,26 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
 	}
 
 	p.PrintLevel(lhs, op, rhs, ";\n")
+}
+
+func (p *CPrinter) FormatPair(v Pair) string {
+	name, value := v.Name(), v.Value()
+
+	if strings.HasPrefix(value, "[]") {
+		value = "*" + value[2:]
+	}
+	if strings.HasPrefix(value, "*") {
+		for i, c := range value {
+			if c != '*' {
+				name = value[:i] + name
+				value = value[i:]
+				break
+			}
+		}
+	}
+	if len(name) > 0 && len(v.Value()) > 0 {
+		return value + " " + name
+	} else {
+		return value + name
+	}
 }

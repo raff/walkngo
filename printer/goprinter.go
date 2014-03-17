@@ -84,7 +84,7 @@ func (p *GoPrinter) PrintFunc(receiver, name, params, results string) {
 			// name type or multiple types
 			fmt.Fprintf(p.w, "(%s) ", results)
 		} else {
-			p.Print(results + " ")
+			p.Print(results, "")
 		}
 	}
 }
@@ -104,7 +104,7 @@ func (p *GoPrinter) PrintFor(init, cond, post string) {
 		p.Print(";", post)
 	}
 
-	p.Print(" ")
+	p.Print("")
 }
 
 func (p *GoPrinter) PrintSwitch(init, expr string) {
@@ -115,12 +115,20 @@ func (p *GoPrinter) PrintSwitch(init, expr string) {
 	p.Print(expr)
 }
 
+func (p *GoPrinter) PrintCase(expr string) {
+	if len(expr) > 0 {
+		p.PrintLevel("case", expr+":\n")
+	} else {
+		p.PrintLevel("default:\n")
+	}
+}
+
 func (p *GoPrinter) PrintIf(init, cond string) {
 	p.PrintLevel("if ")
 	if len(init) > 0 {
 		p.Print(init + "; ")
 	}
-	p.Print(cond, " ")
+	p.Print(cond, "")
 }
 
 func (p *GoPrinter) PrintElse() {
@@ -133,4 +141,8 @@ func (p *GoPrinter) PrintEmpty() {
 
 func (p *GoPrinter) PrintAssignment(lhs, op, rhs string) {
 	p.PrintLevel(lhs, op, rhs, "\n")
+}
+
+func (p *GoPrinter) FormatPair(v Pair) string {
+	return v.String()
 }

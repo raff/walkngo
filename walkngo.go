@@ -1,5 +1,9 @@
 package main
 
+//
+// This is the main program for a Go AST printer
+//
+
 import (
 	"fmt"
 	"os"
