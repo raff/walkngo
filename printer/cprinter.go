@@ -178,3 +178,21 @@ func (p *CPrinter) FormatPair(v Pair) string {
 		return value + name
 	}
 }
+
+func (p *CPrinter) FormatCall(fun, args string) string {
+	switch fun {
+	case "fmt.Printf":
+		fun = "printf"
+	case "fmt.Sprintf":
+		fun = "sprintf"
+	case "fmt.Fprintf":
+		fun = "fprintf"
+	case "fmt.Println":
+		fun = "fprintf"
+		args = `"%s\n", ` + args
+	case "os.Open":
+		fun = "open"
+	}
+
+	return fmt.Sprintf("%s(%s)", fun, args)
+}

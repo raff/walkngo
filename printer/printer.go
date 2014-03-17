@@ -61,6 +61,8 @@ type Printer interface {
 	////////////////////////////////////
 
 	FormatPair(p Pair) string
+
+	FormatCall(fun, args string) string
 }
 
 //

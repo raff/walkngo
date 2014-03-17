@@ -146,3 +146,7 @@ func (p *GoPrinter) PrintAssignment(lhs, op, rhs string) {
 func (p *GoPrinter) FormatPair(v Pair) string {
 	return v.String()
 }
+
+func (p *GoPrinter) FormatCall(fun, args string) string {
+	return fmt.Sprintf("%s(%s)", fun, args)
+}
