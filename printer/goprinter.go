@@ -130,3 +130,7 @@ func (p *GoPrinter) PrintElse() {
 func (p *GoPrinter) PrintEmpty() {
 	p.PrintLevel(";\n")
 }
+
+func (p *GoPrinter) PrintAssignment(lhs, op, rhs string) {
+	p.PrintLevel(lhs, op, rhs, "\n")
+}

@@ -123,10 +123,11 @@ func (p *CPrinter) PrintSwitch(init, expr string) {
 }
 
 func (p *CPrinter) PrintIf(init, cond string) {
-	p.PrintLevel("if ")
 	if len(init) > 0 {
-		p.Print(init + "; ")
-	}
+		p.PrintLevel(init + " if ")
+	} else {
+	    p.PrintLevel("if ")
+    }
 	p.Print(cond, " ")
 }
 
@@ -136,4 +137,14 @@ func (p *CPrinter) PrintElse() {
 
 func (p *CPrinter) PrintEmpty() {
 	p.PrintLevel(";\n")
+}
+
+func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
+	if op == ":=" {
+		// := means there are new variables to be declared (but of course I don't know the real type)
+		lhs = "void " + lhs
+		op = "="
+	}
+
+	p.PrintLevel(lhs, op, rhs, ";\n")
 }

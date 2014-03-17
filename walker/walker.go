@@ -93,6 +93,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 	case *ast.IfStmt:
 		w.p.PrintIf(w.BufferVisit(n.Init), w.parseExpr(n.Cond))
+        w.p.SameLine()
 		w.Visit(n.Body)
 		if n.Else != nil {
 			w.p.SameLine()
@@ -152,7 +153,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.Visit(n.Decl)
 
 	case *ast.AssignStmt:
-		w.p.PrintLevel(w.parseExprList(n.Lhs), n.Tok.String(), w.parseExprList(n.Rhs), "\n")
+		w.p.PrintAssignment(w.parseExprList(n.Lhs), n.Tok.String(), w.parseExprList(n.Rhs))
 
 	case *ast.IncDecStmt:
 		w.p.PrintLevel(w.parseExpr(n.X)+n.Tok.String(), " ")

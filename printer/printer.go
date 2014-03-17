@@ -28,4 +28,5 @@ type Printer interface {
 	PrintIf(init, cond string)
 	PrintElse()
 	PrintEmpty()
+	PrintAssignment(lhs, op, rhs string)
 }
