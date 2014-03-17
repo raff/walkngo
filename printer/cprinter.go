@@ -64,7 +64,7 @@ func (p *CPrinter) PrintValue(vtype, names, typedef, value string) {
 	}
 
 	if len(typedef) == 0 {
-		typedef = "void"
+		typedef, value = GuessType(value)
 	}
 
 	p.PrintLevel(vtype, typedef, names)
@@ -150,7 +150,9 @@ func (p *CPrinter) PrintEmpty() {
 func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
 	if op == ":=" {
 		// := means there are new variables to be declared (but of course I don't know the real type)
-		lhs = "void " + lhs
+		rtype, rvalue := GuessType(rhs)
+		lhs = rtype + " " + lhs
+		rhs = rvalue
 		op = "="
 	}
 
@@ -160,8 +162,21 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
 func (p *CPrinter) FormatPair(v Pair) string {
 	name, value := v.Name(), v.Value()
 
-	if strings.HasPrefix(value, "[]") {
-		value = "*" + value[2:]
+	if strings.HasPrefix(value, "[") {
+		i := strings.LastIndex(value, "]")
+		if i < 0 {
+			// it should be an error
+
+		} else {
+			arr := value[:i+1]
+			value = value[i+1:]
+
+			if len(name) > 0 {
+				name += arr
+			} else {
+				value += arr
+			}
+		}
 	}
 	if strings.HasPrefix(value, "*") {
 		for i, c := range value {
@@ -195,4 +210,47 @@ func (p *CPrinter) FormatCall(fun, args string) string {
 	}
 
 	return fmt.Sprintf("%s(%s)", fun, args)
+}
+
+//
+// Guess type and return type and new value
+//
+func GuessType(value string) (string, string) {
+	vtype := "void"
+
+	if len(value) == 0 {
+		return vtype, value
+	}
+
+	switch value[0] {
+	case '[':
+		// array or map declaration
+		i := strings.Index(value, "{")
+		if i >= 0 {
+			vtype = value[:i]
+			value = value[i:]
+		}
+	case '\'':
+		vtype = "char"
+	case '"':
+		vtype = "string"
+	case '`':
+		vtype = "string"
+		value = `"` + strings.Replace(
+			strings.Replace(value[1:len(value)-1], `"`, `\\"`, -1), "\n", "\\n", -1) + `"`
+
+	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		vtype = "int"
+
+	default:
+		switch value {
+		case "true", "false":
+			vtype = "bool"
+
+		case "nil":
+			vtype = "void*"
+		}
+	}
+
+	return vtype, value
 }
