@@ -40,6 +40,9 @@ type Printer interface {
 	// print a "for" opening statement
 	PrintFor(init, cond, post string)
 
+	// print a "range" opening statement
+	PrintRange(key, value, expr string)
+
 	// print a "switch" opening statement
 	PrintSwitch(init, expr string)
 
@@ -59,6 +62,10 @@ type Printer interface {
 	PrintAssignment(lhs, op, rhs string)
 
 	////////////////////////////////////
+
+	FormatIdent(id string) string
+
+	FormatLiteral(lit string) string
 
 	FormatPair(p Pair) string
 

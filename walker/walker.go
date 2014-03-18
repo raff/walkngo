@@ -60,7 +60,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		}
 
 	case *ast.ImportSpec:
-		w.p.PrintImport(identString(n.Name), n.Path.Value)
+		w.p.PrintImport(w.parseExpr(n.Name), n.Path.Value)
 
 	case *ast.TypeSpec:
 		w.p.PrintType(n.Name.String(), w.parseExpr(n.Type))
@@ -126,12 +126,12 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.UpdateLevel(printer.DOWN)
 
 	case *ast.RangeStmt:
-		w.p.PrintLevel("for", w.parseExpr(n.Key), ",", w.parseExpr(n.Value), ":= range", w.parseExpr(n.X))
+		w.p.PrintRange(w.parseExpr(n.Key), w.parseExpr(n.Value), w.parseExpr(n.X))
 		w.Visit(n.Body)
 		w.p.Print("\n")
 
 	case *ast.BranchStmt:
-		w.p.PrintStmt(n.Tok.String(), identString(n.Label))
+		w.p.PrintStmt(n.Tok.String(), w.parseExpr(n.Label))
 
 	case *ast.DeferStmt:
 		w.p.PrintStmt("defer", w.parseExpr(n.Call))
@@ -199,9 +199,12 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 	switch expr := expr.(type) {
 
-	// a name
+	// a name or a predefined constant
 	case *ast.Ident:
-		return expr.Name
+		if expr == nil {
+			return ""
+		}
+		return w.p.FormatIdent(expr.Name)
 
 		// *thing
 	case *ast.StarExpr:
@@ -238,9 +241,9 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 	case *ast.FuncType:
 		return fmt.Sprintf("(%s) %s", w.parseFieldList(expr.Params, ", "), wrapIf(w.parseFieldList(expr.Results, ", ")))
 
-		// "thing", 0, true, false, nil
+		// "thing", 0, 1.2, 'x', etc.
 	case *ast.BasicLit:
-		return fmt.Sprintf("%v", expr.Value)
+		return w.p.FormatLiteral(expr.Value)
 
 		// type{list}
 	case *ast.CompositeLit:
@@ -336,17 +339,6 @@ func (w *GoWalker) exprOr(expr ast.Expr, v string) string {
 	} else {
 		return v
 	}
-}
-
-//
-// identString return the Ident name or ""
-// to use when it's ok to have an empty part (and you don't want to see '<nil>')
-//
-func identString(i *ast.Ident) (ret string) {
-	if i != nil {
-		ret = i.Name
-	}
-	return
 }
 
 //

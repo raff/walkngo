@@ -107,6 +107,17 @@ func (p *GoPrinter) PrintFor(init, cond, post string) {
 	p.Print("")
 }
 
+func (p *GoPrinter) PrintRange(key, value, expr string) {
+	p.PrintLevel("for", key)
+
+	if len(value) > 0 {
+		p.Print(",", value)
+	}
+
+	p.Print(" := range", expr)
+
+}
+
 func (p *GoPrinter) PrintSwitch(init, expr string) {
 	p.PrintLevel("switch ")
 	if len(init) > 0 {
@@ -141,6 +152,14 @@ func (p *GoPrinter) PrintEmpty() {
 
 func (p *GoPrinter) PrintAssignment(lhs, op, rhs string) {
 	p.PrintLevel(lhs, op, rhs, "\n")
+}
+
+func (p *GoPrinter) FormatIdent(id string) string {
+	return id
+}
+
+func (p *GoPrinter) FormatLiteral(lit string) string {
+	return lit
 }
 
 func (p *GoPrinter) FormatPair(v Pair) string {

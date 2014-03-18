@@ -114,6 +114,17 @@ func (p *CPrinter) PrintFor(init, cond, post string) {
 	p.Print(") ")
 }
 
+func (p *CPrinter) PrintRange(key, value, expr string) {
+	p.PrintLevel("for", key)
+
+	if len(value) > 0 {
+		p.Print(",", value)
+	}
+
+	p.Print(" := range", expr)
+
+}
+
 func (p *CPrinter) PrintSwitch(init, expr string) {
 	p.PrintLevel("switch ")
 	if len(init) > 0 {
@@ -157,6 +168,33 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
 	}
 
 	p.PrintLevel(lhs, op, rhs, ";\n")
+}
+
+func (p *CPrinter) FormatIdent(id string) string {
+	switch id {
+	case "true", "false":
+		return strings.ToUpper(id)
+
+	case "nil":
+		return "NULL"
+
+	default:
+		return id
+	}
+}
+
+func (p *CPrinter) FormatLiteral(lit string) string {
+	if len(lit) == 0 {
+		return lit
+	}
+
+	if lit[0] == '`' {
+		lit = strings.Replace(lit[1:len(lit)-1], `"`, `\\"`, -1)
+		lit = strings.Replace(lit, "\n", "\\n", -1)
+		lit = `"` + lit + `"`
+	}
+
+	return lit
 }
 
 func (p *CPrinter) FormatPair(v Pair) string {
@@ -234,20 +272,16 @@ func GuessType(value string) (string, string) {
 		vtype = "char"
 	case '"':
 		vtype = "string"
-	case '`':
-		vtype = "string"
-		value = `"` + strings.Replace(
-			strings.Replace(value[1:len(value)-1], `"`, `\\"`, -1), "\n", "\\n", -1) + `"`
 
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 		vtype = "int"
 
 	default:
 		switch value {
-		case "true", "false":
+		case "true", "false", "TRUE", "FALSE":
 			vtype = "bool"
 
-		case "nil":
+		case "nil", "NULL":
 			vtype = "void*"
 		}
 	}
