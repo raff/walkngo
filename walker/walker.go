@@ -21,10 +21,11 @@ type GoWalker struct {
 	flush  bool
 	buffer bytes.Buffer
 	writer io.Writer
+	debug  bool
 }
 
-func NewWalker(p printer.Printer, out io.Writer) *GoWalker {
-	w := GoWalker{p: p, flush: true, writer: out}
+func NewWalker(p printer.Printer, out io.Writer, debug bool) *GoWalker {
+	w := GoWalker{p: p, flush: true, writer: out, debug: debug}
 	p.SetWriter(&w.buffer)
 	return &w
 }
@@ -47,6 +48,10 @@ func (w *GoWalker) WalkFile(filename string) error {
 func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 	if node == nil {
 		return
+	}
+
+	if w.debug {
+		w.p.Print(fmt.Sprintf("/* Node: %#v */\n", node))
 	}
 
 	pparent := w.parent
@@ -224,7 +229,12 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// struct{ things }
 	case *ast.StructType:
-		return fmt.Sprintf("struct{%s}", w.parseFieldList(expr.Fields, "; "))
+                fields := w.parseFieldList(expr.Fields, ";\n")
+                if len(fields) > 0 {
+		    return fmt.Sprintf("struct{\n%s}", fields)
+                } else {
+                    return fmt.Sprintf("struct{}");
+                }
 
 		// <-chan type
 	case *ast.ChanType:

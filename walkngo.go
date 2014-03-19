@@ -5,6 +5,7 @@ package main
 //
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -13,34 +14,23 @@ import (
 )
 
 func main() {
-	golang := true
-	args := os.Args[1:] // skip program name
+	clang := flag.Bool("c", false, "print as C program or Go program")
+	debug := flag.Bool("debug", false, "print debug info")
 
-	for len(args) > 0 {
-		if args[0] == "--" {
-			// skip - this is to fool "go run"
+	flag.Parse()
 
-		} else if args[0] == "-go" {
-			golang = true
-		} else if args[0] == "-c" {
-			golang = false
-		} else {
-			break
-		}
-
-		args = args[1:]
-	}
+	filename := flag.Args()[0]
 
 	var walker *walkngo.GoWalker
-	if golang {
-		var printer printer.GoPrinter
-		walker = walkngo.NewWalker(&printer, os.Stdout)
-	} else {
+	if *clang {
 		var printer printer.CPrinter
-		walker = walkngo.NewWalker(&printer, os.Stdout)
+		walker = walkngo.NewWalker(&printer, os.Stdout, *debug)
+	} else {
+		var printer printer.GoPrinter
+		walker = walkngo.NewWalker(&printer, os.Stdout, *debug)
 	}
 
-	if err := walker.WalkFile(args[0]); err != nil {
+	if err := walker.WalkFile(filename); err != nil {
 		fmt.Println(err)
 	}
 }
