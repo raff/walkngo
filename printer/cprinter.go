@@ -55,7 +55,18 @@ func (p *CPrinter) PrintImport(name, path string) {
 }
 
 func (p *CPrinter) PrintType(name, typedef string) {
-	p.PrintLevel("typedef", typedef, name, ";\n")
+	if strings.HasPrefix(typedef, "struct{\n") {
+		defs := strings.Split(typedef[8:len(typedef)-1], ";\n")
+		p.PrintLevel("class", name, "{\n")
+		p.UpdateLevel(1)
+		for _, def := range defs {
+			p.PrintLevel(def, ";\n")
+		}
+		p.UpdateLevel(-1)
+		p.PrintLevel("}\n")
+	} else {
+		p.PrintLevel("typedef", typedef, name, ";\n")
+	}
 }
 
 func (p *CPrinter) PrintValue(vtype, names, typedef, value string) {
