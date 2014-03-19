@@ -46,11 +46,22 @@ func (p *CPrinter) PrintLevel(values ...string) {
 	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "))
 }
 
+func (p *CPrinter) PrintLevelIn(values ...string) {
+	p.level -= 1
+	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "))
+	p.level += 1
+}
+
 func (p *CPrinter) PrintPackage(name string) {
 	p.PrintLevel("//package", name, "\n")
 }
 
 func (p *CPrinter) PrintImport(name, path string) {
+	switch path {
+	case `"strings"`:
+		path = "<string>"
+	}
+
 	p.PrintLevel("#include", name, path, "\n")
 }
 
@@ -59,7 +70,17 @@ func (p *CPrinter) PrintType(name, typedef string) {
 		defs := strings.Split(typedef[8:len(typedef)-1], ";\n")
 		p.PrintLevel("class", name, "{\n")
 		p.UpdateLevel(1)
+
+		ppublic := false
+
 		for _, def := range defs {
+			if IsPublic(def) && !ppublic {
+				ppublic = true
+				p.PrintLevelIn("public:\n")
+			} else if ppublic {
+				ppublic = false
+				p.PrintLevelIn("private:\n")
+			}
 			p.PrintLevel(def, ";\n")
 		}
 		p.UpdateLevel(-1)
@@ -95,10 +116,12 @@ func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
 		results = "void"
 	}
 
-	if len(receiver) > 0 && len(params) > 0 {
-		receiver += ", "
+	if len(receiver) > 0 {
+		parts := strings.SplitN(receiver, " ", 2)
+		receiver = "/* " + parts[1] + " */ " + parts[0]
 	}
-	fmt.Fprintf(p.w, "%s %s(%s%s) ", results, name, receiver, params)
+
+	fmt.Fprintf(p.w, "%s %s::%s(%s) ", results, receiver, name, params)
 }
 
 func (p *CPrinter) PrintFor(init, cond, post string) {
@@ -183,9 +206,6 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
 
 func (p *CPrinter) FormatIdent(id string) string {
 	switch id {
-	case "true", "false":
-		return strings.ToUpper(id)
-
 	case "nil":
 		return "NULL"
 
@@ -289,7 +309,7 @@ func GuessType(value string) (string, string) {
 
 	default:
 		switch value {
-		case "true", "false", "TRUE", "FALSE":
+		case "true", "false":
 			vtype = "bool"
 
 		case "nil", "NULL":
@@ -298,4 +318,8 @@ func GuessType(value string) (string, string) {
 	}
 
 	return vtype, value
+}
+
+func IsPublic(name string) bool {
+	return name[0] >= 'A' && name[0] <= 'Z'
 }
