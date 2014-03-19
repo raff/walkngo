@@ -202,6 +202,10 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 		return ""
 	}
 
+	if w.debug {
+		w.p.Print(fmt.Sprintf("/* Expr: %#v */\n", expr))
+	}
+
 	switch expr := expr.(type) {
 
 	// a name or a predefined constant
@@ -225,7 +229,7 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// interface{ things }
 	case *ast.InterfaceType:
-		return fmt.Sprintf("interface{%s}", w.parseFieldList(expr.Methods, "; "))
+		return w.p.FormatInterface(w.parseFieldList(expr.Methods, ";\n"))
 
 		// struct{ things }
 	case *ast.StructType:

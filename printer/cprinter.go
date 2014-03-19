@@ -259,6 +259,14 @@ func (p *CPrinter) FormatStruct(fields string) string {
 	}
 }
 
+func (p *CPrinter) FormatInterface(methods string) string {
+	if len(methods) > 0 {
+		return fmt.Sprintf("struct{\n%s%s\n%s}", p.indent(), methods, p.indent())
+	} else {
+		return fmt.Sprintf("struct{}")
+	}
+}
+
 func (p *CPrinter) FormatCall(fun, args string) string {
 	switch fun {
 	case "fmt.Printf":

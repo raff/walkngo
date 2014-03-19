@@ -75,6 +75,8 @@ type Printer interface {
 
 	FormatStruct(fields string) string
 
+	FormatInterface(methods string) string
+
 	FormatCall(fun, args string) string
 }
 

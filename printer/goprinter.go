@@ -182,6 +182,14 @@ func (p *GoPrinter) FormatStruct(fields string) string {
 	}
 }
 
+func (p *GoPrinter) FormatInterface(methods string) string {
+	if len(methods) > 0 {
+		return fmt.Sprintf("interface{\n%s%s\n%s}", p.indent(), methods, p.indent())
+	} else {
+		return fmt.Sprintf("interface{}")
+	}
+}
+
 func (p *GoPrinter) FormatCall(fun, args string) string {
 	return fmt.Sprintf("%s(%s)", fun, args)
 }
