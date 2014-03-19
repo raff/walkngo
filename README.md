@@ -7,9 +7,9 @@ This is the "skeleton" for something that can parse a Go source file and print i
 
 The walker package contains the AST walker/visitor, the printer package contains modules that can "print out" the tree as different (probably broken) languages.
 
-The "GoPrinter" module generates a Go source that compile and should work just as good as the original. The "CPrinter" module tries to convert the Go source file to C.
+The "GoPrinter" module generates a Go source that compile and should work just as good as the original. The "CPrinter" module tries to convert the Go source file to C (actually C++)
 
-The main program accepts a -c or a -go arguments to select the output.
+The main program accepts a -c boolean argument to select the output (c=true for C++, false for Go)
 
     walkngo -c walkngo.go
 
