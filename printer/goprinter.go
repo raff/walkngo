@@ -166,6 +166,22 @@ func (p *GoPrinter) FormatPair(v Pair) string {
 	return v.String()
 }
 
+func (p *GoPrinter) FormatArray(len, elt string) string {
+	return fmt.Sprintf("[%s]%s", len, elt)
+}
+
+func (p *GoPrinter) FormatMap(key, elt string) string {
+	return fmt.Sprintf("[%s]%s", key, elt)
+}
+
+func (p *GoPrinter) FormatStruct(fields string) string {
+	if len(fields) > 0 {
+		return fmt.Sprintf("struct{\n%s%s\n%s}", p.indent(), fields, p.indent())
+	} else {
+		return fmt.Sprintf("struct{}")
+	}
+}
+
 func (p *GoPrinter) FormatCall(fun, args string) string {
 	return fmt.Sprintf("%s(%s)", fun, args)
 }

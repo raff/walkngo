@@ -69,6 +69,12 @@ type Printer interface {
 
 	FormatPair(p Pair) string
 
+	FormatArray(len, elt string) string
+
+	FormatMap(key, elt string) string
+
+	FormatStruct(fields string) string
+
 	FormatCall(fun, args string) string
 }
 

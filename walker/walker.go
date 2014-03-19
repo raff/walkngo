@@ -217,11 +217,11 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// [len]type
 	case *ast.ArrayType:
-		return fmt.Sprintf("[%s]%s", w.parseExpr(expr.Len), w.parseExpr(expr.Elt))
+		return w.p.FormatArray(w.parseExpr(expr.Len), w.parseExpr(expr.Elt))
 
 		// [key]value
 	case *ast.MapType:
-		return fmt.Sprintf("[%s]%s", w.parseExpr(expr.Key), w.parseExpr(expr.Value))
+		return w.p.FormatMap(w.parseExpr(expr.Key), w.parseExpr(expr.Value))
 
 		// interface{ things }
 	case *ast.InterfaceType:
@@ -229,12 +229,7 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// struct{ things }
 	case *ast.StructType:
-                fields := w.parseFieldList(expr.Fields, ";\n")
-                if len(fields) > 0 {
-		    return fmt.Sprintf("struct{\n%s}", fields)
-                } else {
-                    return fmt.Sprintf("struct{}");
-                }
+		return w.p.FormatStruct(w.parseFieldList(expr.Fields, ";\n"))
 
 		// <-chan type
 	case *ast.ChanType:

@@ -54,6 +54,7 @@ func (p *CPrinter) PrintLevelIn(values ...string) {
 
 func (p *CPrinter) PrintPackage(name string) {
 	p.PrintLevel("//package", name, "\n")
+	p.PrintLevel("#include <map>\n")
 }
 
 func (p *CPrinter) PrintImport(name, path string) {
@@ -66,28 +67,7 @@ func (p *CPrinter) PrintImport(name, path string) {
 }
 
 func (p *CPrinter) PrintType(name, typedef string) {
-	if strings.HasPrefix(typedef, "struct{\n") {
-		defs := strings.Split(typedef[8:len(typedef)-1], ";\n")
-		p.PrintLevel("class", name, "{\n")
-		p.UpdateLevel(1)
-
-		ppublic := false
-
-		for _, def := range defs {
-			if IsPublic(def) && !ppublic {
-				ppublic = true
-				p.PrintLevelIn("public:\n")
-			} else if ppublic {
-				ppublic = false
-				p.PrintLevelIn("private:\n")
-			}
-			p.PrintLevel(def, ";\n")
-		}
-		p.UpdateLevel(-1)
-		p.PrintLevel("}\n")
-	} else {
-		p.PrintLevel("typedef", typedef, name, ";\n")
-	}
+	p.PrintLevel("typedef", typedef, name, ";\n")
 }
 
 func (p *CPrinter) PrintValue(vtype, names, typedef, value string) {
@@ -260,6 +240,22 @@ func (p *CPrinter) FormatPair(v Pair) string {
 		return value + " " + name
 	} else {
 		return value + name
+	}
+}
+
+func (p *CPrinter) FormatArray(len, elt string) string {
+	return fmt.Sprintf("[%s]%s", len, elt)
+}
+
+func (p *CPrinter) FormatMap(key, elt string) string {
+	return fmt.Sprintf("map<%s, %s>", key, elt)
+}
+
+func (p *CPrinter) FormatStruct(fields string) string {
+	if len(fields) > 0 {
+		return fmt.Sprintf("struct{\n%s%s\n%s}", p.indent(), fields, p.indent())
+	} else {
+		return fmt.Sprintf("struct{}")
 	}
 }
 
