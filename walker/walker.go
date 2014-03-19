@@ -80,10 +80,10 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		}
 
 	case *ast.FuncDecl:
-		w.p.PrintFunc(w.parseFieldList(n.Recv, ", "),
+		w.p.PrintFunc(w.parseFieldList(n.Recv, printer.RECEIVER, ", "),
 			n.Name.String(),
-			w.parseFieldList(n.Type.Params, ", "),
-			w.parseFieldList(n.Type.Results, ", "))
+			w.parseFieldList(n.Type.Params, printer.PARAM, ", "),
+			w.parseFieldList(n.Type.Results, printer.RESULT, ", "))
 		w.Visit(n.Body)
 		w.p.Print("\n")
 
@@ -229,11 +229,11 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// interface{ things }
 	case *ast.InterfaceType:
-		return w.p.FormatInterface(w.parseFieldList(expr.Methods, ";\n"))
+		return w.p.FormatInterface(w.parseFieldList(expr.Methods, printer.METHOD, ";\n"))
 
 		// struct{ things }
 	case *ast.StructType:
-		return w.p.FormatStruct(w.parseFieldList(expr.Fields, ";\n"))
+		return w.p.FormatStruct(w.parseFieldList(expr.Fields, printer.FIELD, ";\n"))
 
 		// <-chan type
 	case *ast.ChanType:
@@ -248,7 +248,9 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// (params...) (result)
 	case *ast.FuncType:
-		return fmt.Sprintf("(%s) %s", w.parseFieldList(expr.Params, ", "), wrapIf(w.parseFieldList(expr.Results, ", ")))
+		return fmt.Sprintf("(%s) %s",
+			w.parseFieldList(expr.Params, printer.PARAM, ", "),
+			wrapIf(w.parseFieldList(expr.Results, printer.RESULT, ", ")))
 
 		// "thing", 0, 1.2, 'x', etc.
 	case *ast.BasicLit:
@@ -318,12 +320,12 @@ func (w *GoWalker) parseExprList(l []ast.Expr) string {
 	return strings.Join(exprs, ", ")
 }
 
-func (w *GoWalker) parseFieldList(l *ast.FieldList, sep string) string {
+func (w *GoWalker) parseFieldList(l *ast.FieldList, ftype printer.FieldType, sep string) string {
 	if l != nil {
 		fields := []string{}
 		for _, f := range l.List {
 			field := printer.Pair{w.parseNames(f.Names), w.parseExpr(f.Type)}
-			fields = append(fields, w.p.FormatPair(field))
+			fields = append(fields, w.p.FormatPair(field, ftype))
 		}
 
 		return strings.Join(fields, sep)

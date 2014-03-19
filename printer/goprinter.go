@@ -162,7 +162,7 @@ func (p *GoPrinter) FormatLiteral(lit string) string {
 	return lit
 }
 
-func (p *GoPrinter) FormatPair(v Pair) string {
+func (p *GoPrinter) FormatPair(v Pair, t FieldType) string {
 	return v.String()
 }
 

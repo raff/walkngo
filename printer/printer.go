@@ -4,9 +4,17 @@ import (
 	"io"
 )
 
+type FieldType int
+
 const (
 	UP   = +1
 	DOWN = -1
+
+	METHOD FieldType = iota
+	FIELD
+	RECEIVER
+	PARAM
+	RESULT
 )
 
 //
@@ -67,7 +75,7 @@ type Printer interface {
 
 	FormatLiteral(lit string) string
 
-	FormatPair(p Pair) string
+	FormatPair(p Pair, t FieldType) string
 
 	FormatArray(len, elt string) string
 

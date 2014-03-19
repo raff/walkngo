@@ -3,7 +3,14 @@ package printer
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
+)
+
+const (
+	NIL  = "nil"
+	NULL = "NULL"
+	IOTA = "iota"
 )
 
 //
@@ -15,6 +22,8 @@ type CPrinter struct {
 	level    int
 	sameline bool
 	w        io.Writer
+
+	iota int // incremented when 'const n = iota' or 'const n' - XXX: need to add a way to reset it
 }
 
 func (p *CPrinter) SetWriter(w io.Writer) {
@@ -73,6 +82,8 @@ func (p *CPrinter) PrintType(name, typedef string) {
 func (p *CPrinter) PrintValue(vtype, names, typedef, value string) {
 	if vtype == "var" {
 		vtype = ""
+	} else if vtype == "const" && len(value) == 0 {
+		value = p.FormatIdent(IOTA)
 	}
 
 	if len(typedef) == 0 {
@@ -184,14 +195,20 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
 	p.PrintLevel(lhs, op, rhs, ";\n")
 }
 
-func (p *CPrinter) FormatIdent(id string) string {
+func (p *CPrinter) FormatIdent(id string) (ret string) {
 	switch id {
-	case "nil":
-		return "NULL"
+	case NIL:
+		return NULL
+
+	case IOTA:
+		ret = strconv.Itoa(p.iota)
+		p.iota += 1
 
 	default:
-		return id
+		ret = id
 	}
+
+	return
 }
 
 func (p *CPrinter) FormatLiteral(lit string) string {
@@ -208,7 +225,7 @@ func (p *CPrinter) FormatLiteral(lit string) string {
 	return lit
 }
 
-func (p *CPrinter) FormatPair(v Pair) string {
+func (p *CPrinter) FormatPair(v Pair, t FieldType) string {
 	name, value := v.Name(), v.Value()
 
 	if strings.HasPrefix(value, "[") {
@@ -236,7 +253,10 @@ func (p *CPrinter) FormatPair(v Pair) string {
 			}
 		}
 	}
-	if len(name) > 0 && len(v.Value()) > 0 {
+
+	if t == METHOD {
+		return name + value
+	} else if len(name) > 0 && len(v.Value()) > 0 {
 		return value + " " + name
 	} else {
 		return value + name
@@ -316,7 +336,7 @@ func GuessType(value string) (string, string) {
 		case "true", "false":
 			vtype = "bool"
 
-		case "nil", "NULL":
+		case NIL, NULL:
 			vtype = "void*"
 		}
 	}
