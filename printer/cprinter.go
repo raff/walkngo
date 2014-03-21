@@ -255,7 +255,7 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) string {
 	}
 
 	if t == METHOD {
-		return name + value
+		return "virtual " + name + value
 	} else if len(name) > 0 && len(v.Value()) > 0 {
 		return value + " " + name
 	} else {

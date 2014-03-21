@@ -244,9 +244,7 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 			ctype = "<-chan"
 		}
 		return fmt.Sprintf("%s %s", ctype, w.parseExpr(expr.Value))
-		break
 
-		// (params...) (result)
 	case *ast.FuncType:
 		return fmt.Sprintf("(%s) %s",
 			w.parseFieldList(expr.Params, printer.PARAM, ", "),
