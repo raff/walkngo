@@ -69,11 +69,18 @@ type Printer interface {
 	// print an assignment statement
 	PrintAssignment(lhs, op, rhs string)
 
+	// print a channel send statement
+	PrintSend(ch, value string)
+
 	////////////////////////////////////
 
 	FormatIdent(id string) string
 
 	FormatLiteral(lit string) string
+
+	FormatUnary(op, operand string) string
+
+	FormatBinary(lhs, op, rhs string) string
 
 	FormatPair(p Pair, t FieldType) string
 

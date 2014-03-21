@@ -159,6 +159,9 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 	case *ast.IncDecStmt:
 		w.p.PrintLevel(w.parseExpr(n.X)+n.Tok.String(), " ")
 
+	case *ast.SendStmt:
+		w.p.PrintSend(w.parseExpr(n.Chan), w.parseExpr(n.Value))
+
 	case *ast.EmptyStmt:
 		w.p.PrintEmpty()
 
@@ -265,11 +268,11 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// -3
 	case *ast.UnaryExpr:
-		return fmt.Sprintf("%s%s", expr.Op.String(), w.parseExpr(expr.X))
+		return w.p.FormatUnary(expr.Op.String(), w.parseExpr(expr.X))
 
 		// 3 + 2
 	case *ast.BinaryExpr:
-		return fmt.Sprintf("%s %s %s", w.parseExpr(expr.X), expr.Op.String(), w.parseExpr(expr.Y))
+		return w.p.FormatBinary(w.parseExpr(expr.X), expr.Op.String(), w.parseExpr(expr.Y))
 
 		// array[index]
 	case *ast.IndexExpr:

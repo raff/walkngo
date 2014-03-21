@@ -195,6 +195,10 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
 	p.PrintLevel(lhs, op, rhs, ";\n")
 }
 
+func (p *CPrinter) PrintSend(ch, value string) {
+	p.PrintLevel(fmt.Sprintf("Channel::Send(%s, %s)", ch, value))
+}
+
 func (p *CPrinter) FormatIdent(id string) (ret string) {
 	switch id {
 	case NIL:
@@ -223,6 +227,18 @@ func (p *CPrinter) FormatLiteral(lit string) string {
 	}
 
 	return lit
+}
+
+func (p *CPrinter) FormatUnary(op, operand string) string {
+	if op == "<-" {
+		return fmt.Sprintf("Channel::Receive(%s)", operand)
+	}
+
+	return fmt.Sprintf("%s%s", op, operand)
+}
+
+func (p *CPrinter) FormatBinary(lhs, op, rhs string) string {
+	return fmt.Sprintf("%s %s %s", lhs, op, rhs)
 }
 
 func (p *CPrinter) FormatPair(v Pair, t FieldType) string {

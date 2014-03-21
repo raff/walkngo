@@ -154,12 +154,24 @@ func (p *GoPrinter) PrintAssignment(lhs, op, rhs string) {
 	p.PrintLevel(lhs, op, rhs, "\n")
 }
 
+func (p *GoPrinter) PrintSend(ch, value string) {
+	p.PrintLevel(ch, "<-", value)
+}
+
 func (p *GoPrinter) FormatIdent(id string) string {
 	return id
 }
 
 func (p *GoPrinter) FormatLiteral(lit string) string {
 	return lit
+}
+
+func (p *GoPrinter) FormatUnary(op, operand string) string {
+	return fmt.Sprintf("%s%s", op, operand)
+}
+
+func (p *GoPrinter) FormatBinary(lhs, op, rhs string) string {
+	return fmt.Sprintf("%s %s %s", lhs, op, rhs)
 }
 
 func (p *GoPrinter) FormatPair(v Pair, t FieldType) string {

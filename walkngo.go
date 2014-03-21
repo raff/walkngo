@@ -21,6 +21,12 @@ type Walker struct {
 
 func (w Walker) Walk(path string, info os.FileInfo, err error) error {
 	fmt.Println()
+
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
 	fmt.Println("//source:", path)
 
 	if !info.IsDir() && strings.HasSuffix(path, ".go") {
@@ -39,12 +45,11 @@ func main() {
 	flag.Parse()
 
 	var walker Walker
+
 	if *clang {
-		var printer printer.CPrinter
-		walker = Walker{walkngo.NewWalker(&printer, os.Stdout, *debug)}
+		walker = Walker{walkngo.NewWalker(&printer.CPrinter{}, os.Stdout, *debug)}
 	} else {
-		var printer printer.GoPrinter
-		walker = Walker{walkngo.NewWalker(&printer, os.Stdout, *debug)}
+		walker = Walker{walkngo.NewWalker(&printer.GoPrinter{}, os.Stdout, *debug)}
 	}
 
 	for _, f := range flag.Args() {
