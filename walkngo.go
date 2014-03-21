@@ -8,10 +8,29 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/raff/walkngo/printer"
 	"github.com/raff/walkngo/walker"
 )
+
+type Walker struct {
+	*walkngo.GoWalker
+}
+
+func (w Walker) Walk(path string, info os.FileInfo, err error) error {
+	fmt.Println()
+	fmt.Println("//source:", path)
+
+	if !info.IsDir() && strings.HasSuffix(path, ".go") {
+		if err := w.WalkFile(path); err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	return nil
+}
 
 func main() {
 	clang := flag.Bool("c", false, "print as C program or Go program")
@@ -19,18 +38,16 @@ func main() {
 
 	flag.Parse()
 
-	filename := flag.Args()[0]
-
-	var walker *walkngo.GoWalker
+	var walker Walker
 	if *clang {
 		var printer printer.CPrinter
-		walker = walkngo.NewWalker(&printer, os.Stdout, *debug)
+		walker = Walker{walkngo.NewWalker(&printer, os.Stdout, *debug)}
 	} else {
 		var printer printer.GoPrinter
-		walker = walkngo.NewWalker(&printer, os.Stdout, *debug)
+		walker = Walker{walkngo.NewWalker(&printer, os.Stdout, *debug)}
 	}
 
-	if err := walker.WalkFile(filename); err != nil {
-		fmt.Println(err)
+	for _, f := range flag.Args() {
+		filepath.Walk(f, walker.Walk)
 	}
 }
