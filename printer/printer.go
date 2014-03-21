@@ -86,6 +86,8 @@ type Printer interface {
 
 	FormatArray(len, elt string) string
 
+	FormatSlice(slice, low, high, max string) string
+
 	FormatMap(key, elt string) string
 
 	FormatStruct(fields string) string

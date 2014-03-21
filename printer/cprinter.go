@@ -293,6 +293,14 @@ func (p *CPrinter) FormatArray(len, elt string) string {
 	return fmt.Sprintf("[%s]%s", len, elt)
 }
 
+func (p *CPrinter) FormatSlice(slice, low, high, max string) string {
+	if max == "" {
+		return fmt.Sprintf("%s[%s:%s]", slice, low, high)
+	} else {
+		return fmt.Sprintf("%s[%s:%s:%s]", slice, low, high, max)
+	}
+}
+
 func (p *CPrinter) FormatMap(key, elt string) string {
 	return fmt.Sprintf("map<%s, %s>", key, elt)
 }

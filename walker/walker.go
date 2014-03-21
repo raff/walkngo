@@ -284,11 +284,7 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// x[low:hi:max]
 	case *ast.SliceExpr:
-		if expr.Max == nil {
-			return fmt.Sprintf("%s[%s:%s]", w.parseExpr(expr.X), w.parseExpr(expr.Low), w.parseExpr(expr.High))
-		} else {
-			return fmt.Sprintf("%s[%s:%s:%s]", w.parseExpr(expr.X), w.parseExpr(expr.Low), w.parseExpr(expr.High), w.parseExpr(expr.Max))
-		}
+        return w.p.FormatSlice(w.parseExpr(expr.X), w.parseExpr(expr.Low), w.parseExpr(expr.High), w.parseExpr(expr.Max))
 
 		// package.member
 	case *ast.SelectorExpr:
