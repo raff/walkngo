@@ -86,6 +86,8 @@ type Printer interface {
 	FormatInterface(methods string) string
 
 	FormatCall(fun, args string) string
+
+	FormatFuncType(params, results string) string
 }
 
 //

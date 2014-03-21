@@ -244,19 +244,29 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) string {
 			}
 		}
 	}
-	if strings.HasPrefix(value, "*") {
-		for i, c := range value {
-			if c != '*' {
-				name = value[:i] + name
-				value = value[i:]
-				break
+
+	/*
+		if strings.HasPrefix(value, "*") {
+			for i, c := range value {
+				if c != '*' {
+					name = value[:i] + name
+					value = value[i:]
+					break
+				}
 			}
 		}
+	*/
+
+	if strings.HasPrefix(value, "*") {
+		i := strings.LastIndex(value, "*") + 1
+		value = value[i:] + value[0:i]
 	}
 
 	if t == METHOD {
-		return "virtual " + name + value
-	} else if len(name) > 0 && len(v.Value()) > 0 {
+		return "virtual " + fmt.Sprintf(value, name)
+	} else if t == RESULT && len(name) > 0 {
+		return fmt.Sprintf("%s /* %s */", value, name)
+	} else if len(name) > 0 && len(value) > 0 {
 		return value + " " + name
 	} else {
 		return value + name
@@ -273,7 +283,7 @@ func (p *CPrinter) FormatMap(key, elt string) string {
 
 func (p *CPrinter) FormatStruct(fields string) string {
 	if len(fields) > 0 {
-		return fmt.Sprintf("struct{\n%s%s\n%s}", p.indent(), fields, p.indent())
+		return fmt.Sprintf("struct {\n%s%s\n%s}", p.indent(), fields, p.indent())
 	} else {
 		return fmt.Sprintf("struct{}")
 	}
@@ -281,7 +291,7 @@ func (p *CPrinter) FormatStruct(fields string) string {
 
 func (p *CPrinter) FormatInterface(methods string) string {
 	if len(methods) > 0 {
-		return fmt.Sprintf("struct{\n%s%s\n%s}", p.indent(), methods, p.indent())
+		return fmt.Sprintf("struct {\n%s%s\n%s}", p.indent(), methods, p.indent())
 	} else {
 		return fmt.Sprintf("struct{}")
 	}
@@ -303,6 +313,14 @@ func (p *CPrinter) FormatCall(fun, args string) string {
 	}
 
 	return fmt.Sprintf("%s(%s)", fun, args)
+}
+
+func (p *CPrinter) FormatFuncType(params, results string) string {
+	if len(results) == 0 {
+		results = "void"
+	}
+
+	return fmt.Sprintf("%s %%s(%s)", results, params)
 }
 
 //

@@ -163,7 +163,11 @@ func (p *GoPrinter) FormatLiteral(lit string) string {
 }
 
 func (p *GoPrinter) FormatPair(v Pair, t FieldType) string {
-	return v.String()
+	if t == METHOD {
+		return v.Name() + v.Value()
+	} else {
+		return v.String()
+	}
 }
 
 func (p *GoPrinter) FormatArray(len, elt string) string {
@@ -192,4 +196,19 @@ func (p *GoPrinter) FormatInterface(methods string) string {
 
 func (p *GoPrinter) FormatCall(fun, args string) string {
 	return fmt.Sprintf("%s(%s)", fun, args)
+}
+
+func (p *GoPrinter) FormatFuncType(params, results string) string {
+	if len(results) == 0 {
+		// no results
+		return fmt.Sprintf("(%s)", params)
+	}
+
+	if strings.ContainsAny(results, " ,") {
+		// name type or multiple types
+		return fmt.Sprintf("(%s) (%s)", params, results)
+	}
+
+	// just type
+	return fmt.Sprintf("(%s) %s", params, results)
 }

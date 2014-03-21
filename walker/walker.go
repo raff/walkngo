@@ -245,10 +245,11 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 		}
 		return fmt.Sprintf("%s %s", ctype, w.parseExpr(expr.Value))
 
+		// (params) (results)
 	case *ast.FuncType:
-		return fmt.Sprintf("(%s) %s",
+		return w.p.FormatFuncType(
 			w.parseFieldList(expr.Params, printer.PARAM, ", "),
-			wrapIf(w.parseFieldList(expr.Results, printer.RESULT, ", ")))
+			w.parseFieldList(expr.Results, printer.RESULT, ", "))
 
 		// "thing", 0, 1.2, 'x', etc.
 	case *ast.BasicLit:
