@@ -27,9 +27,13 @@ func (w Walker) Walk(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	fmt.Println("//source:", path)
+	if info.IsDir() {
+		if strings.HasPrefix(info.Name(), ".") && info.Name() != "." { // assume we want to skip hidden folders
+			return filepath.SkipDir
+		}
+	} else if strings.HasSuffix(path, ".go") {
+		fmt.Println("//source:", path)
 
-	if !info.IsDir() && strings.HasSuffix(path, ".go") {
 		if err := w.WalkFile(path); err != nil {
 			fmt.Println(err)
 		}
