@@ -214,6 +214,10 @@ func (p *GoPrinter) FormatInterface(methods string) string {
 	}
 }
 
+func (p *GoPrinter) FormatChan(chdir, mtype string) string {
+	return fmt.Sprintf("%s %s", chdir, mtype)
+}
+
 func (p *GoPrinter) FormatCall(fun, args string) string {
 	return fmt.Sprintf("%s(%s)", fun, args)
 }
@@ -231,4 +235,8 @@ func (p *GoPrinter) FormatFuncType(params, results string) string {
 
 	// just type
 	return fmt.Sprintf("(%s) %s", params, results)
+}
+
+func (p *GoPrinter) FormatFuncLit(ftype, body string) string {
+	return fmt.Sprintf("func%s %s", ftype, body)
 }

@@ -240,13 +240,13 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// <-chan type
 	case *ast.ChanType:
-		ctype := "chan"
+		chdir := printer.CHAN_BIDI
 		if expr.Dir == ast.SEND {
-			ctype = "chan<-"
+			chdir = printer.CHAN_SEND
 		} else if expr.Dir == ast.RECV {
-			ctype = "<-chan"
+			chdir = printer.CHAN_RECV
 		}
-		return fmt.Sprintf("%s %s", ctype, w.parseExpr(expr.Value))
+		return w.p.FormatChan(chdir, w.parseExpr(expr.Value))
 
 		// (params) (results)
 	case *ast.FuncType:
@@ -304,7 +304,7 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// func(params) (ret) { body }
 	case *ast.FuncLit:
-		return fmt.Sprintf("func%s %s", w.parseExpr(expr.Type), w.BufferVisit(expr.Body))
+		return w.p.FormatFuncLit(w.parseExpr(expr.Type), w.BufferVisit(expr.Body))
 	}
 
 	return fmt.Sprintf("/* Expr: %#v */", expr)

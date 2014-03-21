@@ -172,7 +172,7 @@ func (p *CPrinter) PrintIf(init, cond string) {
 	} else {
 		p.PrintLevel("if ")
 	}
-	p.Print(cond, "")
+	p.Print("(", cond, ") ")
 }
 
 func (p *CPrinter) PrintElse() {
@@ -302,7 +302,7 @@ func (p *CPrinter) FormatSlice(slice, low, high, max string) string {
 }
 
 func (p *CPrinter) FormatMap(key, elt string) string {
-	return fmt.Sprintf("map<%s, %s>", key, elt)
+	return fmt.Sprintf("std::map<%s, %s>", key, elt)
 }
 
 func (p *CPrinter) FormatStruct(fields string) string {
@@ -319,6 +319,21 @@ func (p *CPrinter) FormatInterface(methods string) string {
 	} else {
 		return fmt.Sprintf("struct{}")
 	}
+}
+
+func (p *CPrinter) FormatChan(chdir, mtype string) string {
+	var chtype string
+
+	switch chdir {
+	case CHAN_BIDI:
+		chtype = "Channel::Chan"
+	case CHAN_SEND:
+		chtype = "Channel::SendChan"
+	case CHAN_RECV:
+		chtype = "Channel::ReceiveChan"
+	}
+
+	return fmt.Sprintf("%s<%s>", chtype, mtype)
 }
 
 func (p *CPrinter) FormatCall(fun, args string) string {
@@ -345,6 +360,10 @@ func (p *CPrinter) FormatFuncType(params, results string) string {
 	}
 
 	return fmt.Sprintf("%s %%s(%s)", results, params)
+}
+
+func (p *CPrinter) FormatFuncLit(ftype, body string) string {
+	return fmt.Sprintf(ftype+" %s", "func", body)
 }
 
 //

@@ -15,6 +15,10 @@ const (
 	RECEIVER
 	PARAM
 	RESULT
+
+	CHAN_BIDI = "chan"
+	CHAN_SEND = "chan<-"
+	CHAN_RECV = "<-chan"
 )
 
 //
@@ -94,9 +98,13 @@ type Printer interface {
 
 	FormatInterface(methods string) string
 
+	FormatChan(chdir, mtype string) string
+
 	FormatCall(fun, args string) string
 
 	FormatFuncType(params, results string) string
+
+	FormatFuncLit(ftype, body string) string
 }
 
 //
