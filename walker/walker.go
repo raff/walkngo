@@ -276,15 +276,15 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// array[index]
 	case *ast.IndexExpr:
-		return fmt.Sprintf("%s[%s]", w.parseExpr(expr.X), w.parseExpr(expr.Index))
+		return w.p.FormatArrayIndex(w.parseExpr(expr.X), w.parseExpr(expr.Index))
 
 		// key: value
 	case *ast.KeyValueExpr:
-		return fmt.Sprintf("%s: %s", w.parseExpr(expr.Key), w.parseExpr(expr.Value))
+		return w.p.FormatKeyValue(w.parseExpr(expr.Key), w.parseExpr(expr.Value))
 
 		// x[low:hi:max]
 	case *ast.SliceExpr:
-        return w.p.FormatSlice(w.parseExpr(expr.X), w.parseExpr(expr.Low), w.parseExpr(expr.High), w.parseExpr(expr.Max))
+		return w.p.FormatSlice(w.parseExpr(expr.X), w.parseExpr(expr.Low), w.parseExpr(expr.High), w.parseExpr(expr.Max))
 
 		// package.member
 	case *ast.SelectorExpr:

@@ -186,6 +186,10 @@ func (p *GoPrinter) FormatArray(len, elt string) string {
 	return fmt.Sprintf("[%s]%s", len, elt)
 }
 
+func (p *GoPrinter) FormatArrayIndex(array, index string) string {
+	return fmt.Sprintf("%s[%s]", array, index)
+}
+
 func (p *GoPrinter) FormatSlice(slice, low, high, max string) string {
 	if max == "" {
 		return fmt.Sprintf("%s[%s:%s]", slice, low, high)
@@ -196,6 +200,10 @@ func (p *GoPrinter) FormatSlice(slice, low, high, max string) string {
 
 func (p *GoPrinter) FormatMap(key, elt string) string {
 	return fmt.Sprintf("[%s]%s", key, elt)
+}
+
+func (p *GoPrinter) FormatKeyValue(key, value string) string {
+	return fmt.Sprintf("%s: %s", key, value)
 }
 
 func (p *GoPrinter) FormatStruct(fields string) string {

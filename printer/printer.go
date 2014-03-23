@@ -90,9 +90,13 @@ type Printer interface {
 
 	FormatArray(len, elt string) string
 
+	FormatArrayIndex(array, index string) string
+
 	FormatSlice(slice, low, high, max string) string
 
 	FormatMap(key, elt string) string
+
+	FormatKeyValue(key, value string) string
 
 	FormatStruct(fields string) string
 

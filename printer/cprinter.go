@@ -304,6 +304,10 @@ func (p *CPrinter) FormatArray(len, elt string) string {
 	return fmt.Sprintf("[%s]%s", len, elt)
 }
 
+func (p *CPrinter) FormatArrayIndex(array, index string) string {
+	return fmt.Sprintf("%s[%s]", array, index)
+}
+
 func (p *CPrinter) FormatSlice(slice, low, high, max string) string {
 	if max == "" {
 		return fmt.Sprintf("%s[%s:%s]", slice, low, high)
@@ -314,6 +318,10 @@ func (p *CPrinter) FormatSlice(slice, low, high, max string) string {
 
 func (p *CPrinter) FormatMap(key, elt string) string {
 	return fmt.Sprintf("std::map<%s, %s>", key, elt)
+}
+
+func (p *CPrinter) FormatKeyValue(key, value string) string {
+	return fmt.Sprintf("{%s, %s}", key, value)
 }
 
 func (p *CPrinter) FormatStruct(fields string) string {
