@@ -45,6 +45,8 @@ func (w *GoWalker) WalkFile(filename string) error {
 		return err
 	}
 
+	w.p.Print(fmt.Sprintf("//source: %s\n", filename))
+
 	ast.Walk(w, f)
 	return nil
 }
