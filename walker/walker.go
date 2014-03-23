@@ -30,6 +30,13 @@ func NewWalker(p printer.Printer, out io.Writer, debug bool) *GoWalker {
 	return &w
 }
 
+func (w *GoWalker) SetWriter(writer io.Writer) (old io.Writer) {
+	w.Flush()
+
+	old, w.writer = w.writer, writer
+	return
+}
+
 func (w *GoWalker) WalkFile(filename string) error {
 	fset := token.NewFileSet() // positions are relative to fset
 
@@ -188,14 +195,17 @@ func (w *GoWalker) BufferVisit(node ast.Node) (ret string) {
 
 	prev := w.flush
 	w.flush = false
+
 	w.Visit(node)
+
 	w.flush = prev
 
-	ret = strings.TrimSpace(w.buffer.String())
+	ret = w.buffer.String()
+	w.buffer.Reset()
 
-	if w.flush {
-		w.buffer.Reset()
-	}
+	//if prev == true {
+	//    ret = strings.TrimSpace(ret)
+	//}
 
 	return
 }
@@ -356,16 +366,6 @@ func (w *GoWalker) exprOr(expr ast.Expr, v string) string {
 func ifTrue(val string, cond bool) (ret string) {
 	if cond {
 		ret = val
-	}
-	return
-}
-
-//
-// if val is not empty it should be wrapped in round brackets
-//
-func wrapIf(val string) (ret string) {
-	if len(val) > 0 {
-		ret = fmt.Sprintf("(%s)", val)
 	}
 	return
 }
