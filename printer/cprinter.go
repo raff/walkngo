@@ -64,6 +64,7 @@ func (p *CPrinter) PrintLevelIn(values ...string) {
 func (p *CPrinter) PrintPackage(name string) {
 	p.PrintLevel("//package", name, "\n")
 	p.PrintLevel("#include <map>\n")
+	p.PrintLevel("#include <tuple>\n")
 }
 
 func (p *CPrinter) PrintImport(name, path string) {
@@ -99,12 +100,18 @@ func (p *CPrinter) PrintValue(vtype, names, typedef, value string) {
 }
 
 func (p *CPrinter) PrintStmt(stmt, expr string) {
+	if stmt == "return" && IsMultiValue(expr) {
+		expr = fmt.Sprintf("make_tuple(%s)", expr)
+	}
+
 	p.PrintLevel(stmt, expr, ";\n")
 }
 
 func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
 	if len(results) == 0 {
 		results = "void"
+	} else if IsMultiValue(results) {
+		results = fmt.Sprintf("tuple<%s>", results)
 	}
 
 	if len(receiver) > 0 {
@@ -190,6 +197,10 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
 		lhs = rtype + " " + lhs
 		rhs = rvalue
 		op = "="
+	}
+
+	if IsMultiValue(lhs) {
+		lhs = fmt.Sprintf("tie(%s)", lhs)
 	}
 
 	p.PrintLevel(lhs, op, rhs, ";\n")
@@ -407,4 +418,8 @@ func GuessType(value string) (string, string) {
 
 func IsPublic(name string) bool {
 	return name[0] >= 'A' && name[0] <= 'Z'
+}
+
+func IsMultiValue(expr string) bool {
+	return strings.Contains(expr, ",")
 }
