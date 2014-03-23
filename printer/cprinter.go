@@ -368,6 +368,8 @@ func (p *CPrinter) FormatCall(fun, args string) string {
 func (p *CPrinter) FormatFuncType(params, results string) string {
 	if len(results) == 0 {
 		results = "void"
+	} else if IsMultiValue(results) {
+		results = fmt.Sprintf("tuple<%s>", results)
 	}
 
 	return fmt.Sprintf("%s %%s(%s)", results, params)
