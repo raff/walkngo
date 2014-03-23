@@ -70,10 +70,11 @@ func (p *CPrinter) PrintPackage(name string) {
 func (p *CPrinter) PrintImport(name, path string) {
 	switch path {
 	case `"strings"`:
-		path = "<string>"
+		p.PrintLevel("#include <string>\n")
+	default:
+		p.PrintLevel("//import", name, path, "\n")
 	}
 
-	p.PrintLevel("#include", name, path, "\n")
 }
 
 func (p *CPrinter) PrintType(name, typedef string) {
