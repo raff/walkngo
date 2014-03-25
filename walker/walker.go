@@ -81,7 +81,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 	case *ast.ValueSpec:
 		vtype := (pparent.(*ast.GenDecl)).Tok.String()
-		w.p.PrintValue(vtype, w.parseNames(n.Names), w.parseExpr(n.Type), w.parseExprList(n.Values))
+		w.p.PrintValue(vtype, w.parseExpr(n.Type), w.parseNames(n.Names), w.parseExprList(n.Values), len(n.Names) > 1, len(n.Values) > 1)
 
 	case *ast.GenDecl:
 		for _, s := range n.Specs {
@@ -154,7 +154,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.PrintStmt("go", w.parseExpr(n.Call))
 
 	case *ast.ReturnStmt:
-		w.p.PrintStmt("return", w.parseExprList(n.Results))
+		w.p.PrintReturn(w.parseExprList(n.Results), len(n.Results) > 1)
 
 	case *ast.ExprStmt:
 		w.p.PrintLevel(w.parseExpr(n.X), "\n")
@@ -163,7 +163,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.Visit(n.Decl)
 
 	case *ast.AssignStmt:
-		w.p.PrintAssignment(w.parseExprList(n.Lhs), n.Tok.String(), w.parseExprList(n.Rhs))
+		w.p.PrintAssignment(w.parseExprList(n.Lhs), n.Tok.String(), w.parseExprList(n.Rhs), len(n.Lhs) > 1, len(n.Rhs) > 1)
 
 	case *ast.IncDecStmt:
 		w.p.PrintLevel(w.parseExpr(n.X)+n.Tok.String(), " ")

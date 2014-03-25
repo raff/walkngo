@@ -41,10 +41,13 @@ type Printer interface {
 	PrintType(name, typedef string)
 
 	// print a const/var definition
-	PrintValue(vtype, names, typedef, values string)
+	PrintValue(vtype, typedef, names, values string, ntuple, vtuple bool)
 
 	// print a 'special' statement (goto, break, continue, ...)
 	PrintStmt(stmt, expr string)
+
+	// print return statemement
+	PrintReturn(expr string, tuple bool)
 
 	// print a function definition
 	PrintFunc(receiver, name, params, results string)
@@ -71,7 +74,7 @@ type Printer interface {
 	PrintEmpty()
 
 	// print an assignment statement
-	PrintAssignment(lhs, op, rhs string)
+	PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool)
 
 	// print a channel send statement
 	PrintSend(ch, value string)

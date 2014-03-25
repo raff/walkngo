@@ -84,31 +84,43 @@ func (p *CPrinter) PrintType(name, typedef string) {
 	p.PrintLevel("typedef", typedef, name, ";\n")
 }
 
-func (p *CPrinter) PrintValue(vtype, names, typedef, value string) {
+func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtuple bool) {
 	if vtype == "var" {
 		vtype = ""
-	} else if vtype == "const" && len(value) == 0 {
-		value = p.FormatIdent(IOTA)
+	} else if vtype == "const" && len(values) == 0 {
+		values = p.FormatIdent(IOTA)
 	}
 
 	if len(typedef) == 0 {
-		typedef, value = GuessType(value)
+		typedef, values = GuessType(values)
+	}
+
+	if ntuple && len(values) > 0 {
+		names = fmt.Sprintf("std::tie(%s)", names)
 	}
 
 	p.PrintLevel(vtype, typedef, names)
 
-	if len(value) > 0 {
-		p.Print(" =", value)
+	if len(values) > 0 {
+		if vtuple {
+			values = fmt.Sprintf("std::make_tuple(%s)", values)
+		}
+
+		p.Print(" =", values)
 	}
 	p.Print(";\n")
 }
 
 func (p *CPrinter) PrintStmt(stmt, expr string) {
-	if stmt == "return" && IsMultiValue(expr) {
+	p.PrintLevel(stmt, expr, ";\n")
+}
+
+func (p *CPrinter) PrintReturn(expr string, tuple bool) {
+	if tuple {
 		expr = fmt.Sprintf("std::make_tuple(%s)", expr)
 	}
 
-	p.PrintLevel(stmt, expr, ";\n")
+	p.PrintStmt("return", expr)
 }
 
 func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
@@ -194,7 +206,7 @@ func (p *CPrinter) PrintEmpty() {
 	p.PrintLevel(";\n")
 }
 
-func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
+func (p *CPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
 	if op == ":=" {
 		// := means there are new variables to be declared (but of course I don't know the real type)
 		rtype, rvalue := GuessType(rhs)
@@ -203,8 +215,12 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string) {
 		op = "="
 	}
 
-	if IsMultiValue(lhs) {
+	if ltuple {
 		lhs = fmt.Sprintf("std::tie(%s)", lhs)
+	}
+
+	if rtuple {
+		rhs = fmt.Sprintf("std::make_tuple(%s)", rhs)
 	}
 
 	p.PrintLevel(lhs, op, rhs, ";\n")

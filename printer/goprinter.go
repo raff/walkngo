@@ -58,19 +58,23 @@ func (p *GoPrinter) PrintType(name, typedef string) {
 	p.PrintLevel("type", name, typedef, "\n")
 }
 
-func (p *GoPrinter) PrintValue(vtype, names, typedef, value string) {
+func (p *GoPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtuple bool) {
 	p.PrintLevel(vtype, names)
 	if len(typedef) > 0 {
 		p.Print(" ", typedef)
 	}
-	if len(value) > 0 {
-		p.Print(" =", value)
+	if len(values) > 0 {
+		p.Print(" =", values)
 	}
 	p.Print("\n")
 }
 
 func (p *GoPrinter) PrintStmt(stmt, expr string) {
 	p.PrintLevel(stmt, expr, "\n")
+}
+
+func (p *GoPrinter) PrintReturn(expr string, tuple bool) {
+	p.PrintStmt("return", expr)
 }
 
 func (p *GoPrinter) PrintFunc(receiver, name, params, results string) {
@@ -150,7 +154,7 @@ func (p *GoPrinter) PrintEmpty() {
 	p.PrintLevel(";\n")
 }
 
-func (p *GoPrinter) PrintAssignment(lhs, op, rhs string) {
+func (p *GoPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
 	p.PrintLevel(lhs, op, rhs, "\n")
 }
 
