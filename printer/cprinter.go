@@ -130,21 +130,30 @@ func (p *CPrinter) PrintReturn(expr string, tuple bool) {
 }
 
 func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
-	if len(results) == 0 {
-		results = "void"
-	} else if IsMultiValue(results) {
-		results = fmt.Sprintf("tuple<%s>", results)
-	}
+        if len(receiver) == 0 && len(params) == 0 && len(results) == 0 && name == "main" {
+            // the "main"
+            results = "int"
+            params = "int argc, char **argv"
+        } else {
+            if len(results) == 0 {
+                    results = "void"
+            } else if IsMultiValue(results) {
+                    results = fmt.Sprintf("tuple<%s>", results)
+            }
 
-	if len(receiver) > 0 {
-		parts := strings.SplitN(receiver, " ", 2)
-		receiver = "/* " + parts[1] + " */ " + parts[0]
-	}
+            if len(receiver) > 0 {
+                    parts := strings.SplitN(receiver, " ", 2)
+                    receiver = "/* " + parts[1] + " */ " + parts[0] + "::"
+            }
+        }
 
-	fmt.Fprintf(p.w, "%s %s::%s(%s) ", results, receiver, name, params)
+	fmt.Fprintf(p.w, "%s %s%s(%s) ", results, receiver, name, params)
 }
 
 func (p *CPrinter) PrintFor(init, cond, post string) {
+        init = strings.TrimRight(init, SEMI)
+        post = strings.TrimRight(post, SEMI)
+
 	onlycond := len(init) == 0 && len(post) == 0
 
 	if len(cond) == 0 {
@@ -159,9 +168,9 @@ func (p *CPrinter) PrintFor(init, cond, post string) {
 		if len(init) > 0 {
 			p.Print(init)
 		}
-		p.Print("; ", cond, "; ")
+		p.Print("; " + cond + ";")
 		if len(post) > 0 {
-			p.Print(post)
+			p.Print(" " + post)
 		}
 
 	}
@@ -180,11 +189,10 @@ func (p *CPrinter) PrintRange(key, value, expr string) {
 }
 
 func (p *CPrinter) PrintSwitch(init, expr string) {
-	p.PrintLevel(NONE, "switch ")
 	if len(init) > 0 {
-		p.Print(init + "; ")
+		p.PrintLevel(SEMI, init)
 	}
-	p.Print(expr)
+	p.PrintLevel(NONE, "switch (", expr, ")")
 }
 
 func (p *CPrinter) PrintCase(expr string) {
@@ -383,15 +391,19 @@ func (p *CPrinter) FormatChan(chdir, mtype string) string {
 
 func (p *CPrinter) FormatCall(fun, args string) string {
 	switch fun {
-	case "fmt.Printf":
-		fun = "printf"
 	case "fmt.Sprintf":
 		fun = "sprintf"
 	case "fmt.Fprintf":
 		fun = "fprintf"
-	case "fmt.Println":
-		fun = "fprintf"
-		args = `"%s\n", ` + args
+	case "fmt.Printf":
+		fun = "printf"
+	case "fmt.Fprintln":
+		fun = "fputs"
+        case "fmt.Print", "print":
+                fun = "printf"
+                args = fmt.Sprintf(`"%%s", %s`, args)
+	case "fmt.Println", "println":
+		fun = "puts"
 	case "os.Open":
 		fun = "open"
 	}
