@@ -35,6 +35,7 @@ type Printer interface {
 	IsSameLine() bool
 	Print(values ...string)
 	PrintLevel(term string, values ...string)
+    GetSeparator(f FieldType) string
 
 	// print the package name
 	PrintPackage(name string)

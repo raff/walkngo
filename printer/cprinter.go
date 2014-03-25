@@ -42,6 +42,14 @@ func (p *CPrinter) IsSameLine() bool {
 	return p.sameline
 }
 
+func (p *CPrinter) GetSeparator(ftype FieldType) string {
+    if ftype == METHOD || ftype == FIELD {
+        return ";\n" + p.indent()
+    } else {
+        return ", "
+    }
+}
+
 func (p *CPrinter) indent() string {
 	if p.sameline {
 		p.sameline = false
@@ -67,21 +75,11 @@ func (p *CPrinter) PrintLevelIn(term string, values ...string) {
 
 func (p *CPrinter) PrintPackage(name string) {
 	p.PrintLevel(NL, "//package", name)
-	p.PrintLevel(NL, "#include <map>")
-	p.PrintLevel(NL, "#include <tuple>")
+	p.PrintLevel(NL, "#include <go.h>")
 }
 
 func (p *CPrinter) PrintImport(name, path string) {
-	switch path {
-	case `"strings"`:
-		p.PrintLevel(NL, "#include <string>")
-	case `"sync"`:
-		p.PrintLevel(NL, "#include <mutex>")
-		p.PrintLevel(NL, "#include <condition_variable>")
-	default:
-		p.PrintLevel(NL, "//import", name, path)
-	}
-
+    p.PrintLevel(NL, "//import", name, path)
 }
 
 func (p *CPrinter) PrintType(name, typedef string) {
@@ -100,14 +98,14 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 	}
 
 	if ntuple && len(values) > 0 {
-		names = fmt.Sprintf("std::tie(%s)", names)
+		names = fmt.Sprintf("tie(%s)", names)
 	}
 
 	p.PrintLevel(NONE, vtype, typedef, names)
 
 	if len(values) > 0 {
 		if vtuple {
-			values = fmt.Sprintf("std::make_tuple(%s)", values)
+			values = fmt.Sprintf("make_tuple(%s)", values)
 		}
 
 		p.Print(" =", values)
@@ -125,7 +123,7 @@ func (p *CPrinter) PrintStmt(stmt, expr string) {
 
 func (p *CPrinter) PrintReturn(expr string, tuple bool) {
 	if tuple {
-		expr = fmt.Sprintf("std::make_tuple(%s)", expr)
+		expr = fmt.Sprintf("make_tuple(%s)", expr)
 	}
 
 	p.PrintStmt("return", expr)
@@ -135,7 +133,7 @@ func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
 	if len(results) == 0 {
 		results = "void"
 	} else if IsMultiValue(results) {
-		results = fmt.Sprintf("std::tuple<%s>", results)
+		results = fmt.Sprintf("tuple<%s>", results)
 	}
 
 	if len(receiver) > 0 {
@@ -224,11 +222,11 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
 	}
 
 	if ltuple {
-		lhs = fmt.Sprintf("std::tie(%s)", lhs)
+		lhs = fmt.Sprintf("tie(%s)", lhs)
 	}
 
 	if rtuple {
-		rhs = fmt.Sprintf("std::make_tuple(%s)", rhs)
+		rhs = fmt.Sprintf("make_tuple(%s)", rhs)
 	}
 
 	p.PrintLevel(SEMI, lhs, op, rhs)
@@ -345,7 +343,7 @@ func (p *CPrinter) FormatSlice(slice, low, high, max string) string {
 }
 
 func (p *CPrinter) FormatMap(key, elt string) string {
-	return fmt.Sprintf("std::map<%s, %s>", key, elt)
+	return fmt.Sprintf("map<%s, %s>", key, elt)
 }
 
 func (p *CPrinter) FormatKeyValue(key, value string) string {

@@ -33,6 +33,14 @@ func (p *GoPrinter) IsSameLine() bool {
 	return p.sameline
 }
 
+func (p *GoPrinter) GetSeparator(ftype FieldType) string {
+    if ftype == METHOD || ftype == FIELD {
+        return ";\n" + p.indent()
+    } else {
+        return ", "
+    }
+}
+
 func (p *GoPrinter) indent() string {
 	if p.sameline {
 		p.sameline = false

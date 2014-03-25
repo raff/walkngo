@@ -91,10 +91,10 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 	case *ast.FuncDecl:
 		w.p.Print("\n")
-		w.p.PrintFunc(w.parseFieldList(n.Recv, printer.RECEIVER, ", "),
+		w.p.PrintFunc(w.parseFieldList(n.Recv, printer.RECEIVER),
 			n.Name.String(),
-			w.parseFieldList(n.Type.Params, printer.PARAM, ", "),
-			w.parseFieldList(n.Type.Results, printer.RESULT, ", "))
+			w.parseFieldList(n.Type.Params, printer.PARAM),
+			w.parseFieldList(n.Type.Results, printer.RESULT))
 		w.Visit(n.Body)
 		w.p.Print("\n")
 
@@ -254,11 +254,17 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// interface{ things }
 	case *ast.InterfaceType:
-		return w.p.FormatInterface(w.parseFieldList(expr.Methods, printer.METHOD, ";\n"))
+		w.p.UpdateLevel(printer.UP)
+		ret := w.p.FormatInterface(w.parseFieldList(expr.Methods, printer.METHOD))
+		w.p.UpdateLevel(printer.DOWN)
+        return ret
 
 		// struct{ things }
 	case *ast.StructType:
-		return w.p.FormatStruct(w.parseFieldList(expr.Fields, printer.FIELD, ";\n"))
+		w.p.UpdateLevel(printer.UP)
+		ret := w.p.FormatStruct(w.parseFieldList(expr.Fields, printer.FIELD))
+		w.p.UpdateLevel(printer.DOWN)
+        return ret
 
 		// <-chan type
 	case *ast.ChanType:
@@ -273,8 +279,8 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 		// (params) (results)
 	case *ast.FuncType:
 		return w.p.FormatFuncType(
-			w.parseFieldList(expr.Params, printer.PARAM, ", "),
-			w.parseFieldList(expr.Results, printer.RESULT, ", "))
+			w.parseFieldList(expr.Params, printer.PARAM),
+			w.parseFieldList(expr.Results, printer.RESULT))
 
 		// "thing", 0, 1.2, 'x', etc.
 	case *ast.BasicLit:
@@ -340,7 +346,9 @@ func (w *GoWalker) parseExprList(l []ast.Expr) string {
 	return strings.Join(exprs, ", ")
 }
 
-func (w *GoWalker) parseFieldList(l *ast.FieldList, ftype printer.FieldType, sep string) string {
+func (w *GoWalker) parseFieldList(l *ast.FieldList, ftype printer.FieldType) string {
+    sep := w.p.GetSeparator(ftype)
+
 	if l != nil {
 		fields := []string{}
 		for _, f := range l.List {
