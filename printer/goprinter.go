@@ -33,12 +33,8 @@ func (p *GoPrinter) IsSameLine() bool {
 	return p.sameline
 }
 
-func (p *GoPrinter) GetSeparator(ftype FieldType) string {
-	if ftype == METHOD || ftype == FIELD {
-		return ";\n" + p.indent()
-	} else {
-		return ", "
-	}
+func (p *GoPrinter) Chop(line string) string {
+	return strings.TrimRight(line, COMMA)
 }
 
 func (p *GoPrinter) indent() string {
@@ -199,10 +195,13 @@ func (p *GoPrinter) FormatBinary(lhs, op, rhs string) string {
 }
 
 func (p *GoPrinter) FormatPair(v Pair, t FieldType) string {
-	if t == METHOD {
-		return v.Name() + v.Value()
-	} else {
-		return v.String()
+	switch t {
+	case METHOD:
+		return p.indent() + v.Name() + v.Value()
+	case FIELD:
+		return p.indent() + v.String()
+	default:
+		return v.String() + COMMA
 	}
 }
 
@@ -232,17 +231,17 @@ func (p *GoPrinter) FormatKeyValue(key, value string) string {
 
 func (p *GoPrinter) FormatStruct(fields string) string {
 	if len(fields) > 0 {
-		return fmt.Sprintf("struct{\n%s%s\n%s}", p.indent(), fields, p.indent())
+		return fmt.Sprintf("struct{\n%s}", fields)
 	} else {
-		return fmt.Sprintf("struct{}")
+		return "struct{}"
 	}
 }
 
 func (p *GoPrinter) FormatInterface(methods string) string {
 	if len(methods) > 0 {
-		return fmt.Sprintf("interface{\n%s%s\n%s}", p.indent(), methods, p.indent())
+		return fmt.Sprintf("interface{\n%s}", methods)
 	} else {
-		return fmt.Sprintf("interface{}")
+		return "interface{}"
 	}
 }
 

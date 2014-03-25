@@ -42,12 +42,8 @@ func (p *CPrinter) IsSameLine() bool {
 	return p.sameline
 }
 
-func (p *CPrinter) GetSeparator(ftype FieldType) string {
-	if ftype == METHOD || ftype == FIELD {
-		return ";\n" + p.indent()
-	} else {
-		return ", "
-	}
+func (p *CPrinter) Chop(line string) string {
+	return strings.TrimRight(line, COMMA)
 }
 
 func (p *CPrinter) indent() string {
@@ -148,7 +144,7 @@ func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
 
 		if len(receiver) > 0 {
 			parts := strings.SplitN(receiver, " ", 2)
-			receiver = "/* " + parts[1] + " */ " + parts[0] + "::"
+			receiver = "/* " + parts[1] + " */ " + strings.TrimRight(parts[0], "*") + "::"
 		}
 	}
 
@@ -295,7 +291,7 @@ func (p *CPrinter) FormatBinary(lhs, op, rhs string) string {
 	return fmt.Sprintf("%s %s %s", lhs, op, rhs)
 }
 
-func (p *CPrinter) FormatPair(v Pair, t FieldType) string {
+func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 	name, value := v.Name(), v.Value()
 
 	if strings.HasPrefix(value, "[") {
@@ -321,14 +317,22 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) string {
 	}
 
 	if t == METHOD {
-		return "virtual " + fmt.Sprintf(value, name)
+		ret = "virtual " + fmt.Sprintf(value, name)
 	} else if t == RESULT && len(name) > 0 {
-		return fmt.Sprintf("%s /* %s */", value, name)
+		ret = fmt.Sprintf("%s /* %s */", value, name)
 	} else if len(name) > 0 && len(value) > 0 {
-		return value + " " + name
+		ret = value + " " + name
 	} else {
-		return value + name
+		ret = value + name
 	}
+
+	if t == METHOD || t == FIELD {
+		ret = p.indent() + ret + SEMI
+	} else {
+		ret += COMMA
+	}
+
+	return
 }
 
 func (p *CPrinter) FormatArray(len, elt string) string {
@@ -357,17 +361,17 @@ func (p *CPrinter) FormatKeyValue(key, value string) string {
 
 func (p *CPrinter) FormatStruct(fields string) string {
 	if len(fields) > 0 {
-		return fmt.Sprintf("struct {\n%s%s\n%s}", p.indent(), fields, p.indent())
+		return fmt.Sprintf("struct {\n%s}", fields)
 	} else {
-		return fmt.Sprintf("struct{}")
+		return "struct{}"
 	}
 }
 
 func (p *CPrinter) FormatInterface(methods string) string {
 	if len(methods) > 0 {
-		return fmt.Sprintf("struct {\n%s%s\n%s}", p.indent(), methods, p.indent())
+		return fmt.Sprintf("struct {\n%s}", methods)
 	} else {
-		return fmt.Sprintf("struct{}")
+		return "struct{}"
 	}
 }
 

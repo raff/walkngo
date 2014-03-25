@@ -20,9 +20,10 @@ const (
 	CHAN_SEND = "chan<-"
 	CHAN_RECV = "<-chan"
 
-	NONE = ""
-	NL   = "\n"
-	SEMI = ";\n"
+	NONE  = ""
+	NL    = "\n"
+	SEMI  = ";\n"
+	COMMA = ", "
 )
 
 //
@@ -35,7 +36,7 @@ type Printer interface {
 	IsSameLine() bool
 	Print(values ...string)
 	PrintLevel(term string, values ...string)
-	GetSeparator(f FieldType) string
+	Chop(line string) string
 
 	// print the package name
 	PrintPackage(name string)

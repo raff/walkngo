@@ -348,19 +348,16 @@ func (w *GoWalker) parseExprList(l []ast.Expr) string {
 }
 
 func (w *GoWalker) parseFieldList(l *ast.FieldList, ftype printer.FieldType) string {
-	sep := w.p.GetSeparator(ftype)
+	buffer := bytes.NewBufferString("")
 
 	if l != nil {
-		fields := []string{}
 		for _, f := range l.List {
 			field := printer.Pair{w.parseNames(f.Names), w.parseExpr(f.Type)}
-			fields = append(fields, w.p.FormatPair(field, ftype))
+			buffer.WriteString(w.p.FormatPair(field, ftype))
 		}
-
-		return strings.Join(fields, sep)
-	} else {
-		return ""
 	}
+
+	return w.p.Chop(buffer.String())
 }
 
 func (w *GoWalker) parseNames(v []*ast.Ident) string {
