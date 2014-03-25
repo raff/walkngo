@@ -95,6 +95,11 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 
 	if len(typedef) == 0 {
 		typedef, values = GuessType(values)
+	} else if strings.Contains(typedef, "[") {
+		// array or map ?
+		i := strings.Index(typedef, "[")
+		names += typedef[i:]
+		typedef = typedef[0:i]
 	}
 
 	if ntuple && len(values) > 0 {
@@ -310,18 +315,6 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) string {
 		}
 	}
 
-	/*
-		if strings.HasPrefix(value, "*") {
-			for i, c := range value {
-				if c != '*' {
-					name = value[:i] + name
-					value = value[i:]
-					break
-				}
-			}
-		}
-	*/
-
 	if strings.HasPrefix(value, "*") {
 		i := strings.LastIndex(value, "*") + 1
 		value = value[i:] + value[0:i]
@@ -339,7 +332,7 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) string {
 }
 
 func (p *CPrinter) FormatArray(len, elt string) string {
-	return fmt.Sprintf("[%s]%s", len, elt)
+	return fmt.Sprintf("%s[%s]", elt, len)
 }
 
 func (p *CPrinter) FormatArrayIndex(array, index string) string {
