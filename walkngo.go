@@ -41,7 +41,7 @@ func (w Walker) Walk(path string, info os.FileInfo, err error) error {
 		}
 
 		if len(outpath) > 0 {
-			if err := os.MkdirAll(outpath, 0555); err != nil {
+			if err := os.MkdirAll(outpath, 0755); err != nil {
 				fmt.Println(err)
 			}
 		}
