@@ -84,11 +84,13 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.PrintValue(vtype, w.parseExpr(n.Type), w.parseNames(n.Names), w.parseExprList(n.Values), len(n.Names) > 1, len(n.Values) > 1)
 
 	case *ast.GenDecl:
+		w.p.Print("\n")
 		for _, s := range n.Specs {
 			w.Visit(s)
 		}
 
 	case *ast.FuncDecl:
+		w.p.Print("\n")
 		w.p.PrintFunc(w.parseFieldList(n.Recv, printer.RECEIVER, ", "),
 			n.Name.String(),
 			w.parseFieldList(n.Type.Params, printer.PARAM, ", "),
@@ -106,27 +108,34 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.PrintLevel("}")
 
 	case *ast.IfStmt:
+		if !w.p.IsSameLine() {
+			w.p.Print("\n")
+		}
 		w.p.PrintIf(w.BufferVisit(n.Init), w.parseExpr(n.Cond))
 		w.p.SameLine()
 		w.Visit(n.Body)
 		if n.Else != nil {
 			w.p.SameLine()
 			w.p.PrintElse()
+			w.p.SameLine()
 			w.Visit(n.Else)
 		}
 		w.p.Print("\n")
 
 	case *ast.ForStmt:
+		w.p.Print("\n")
 		w.p.PrintFor(w.BufferVisit(n.Init), w.parseExpr(n.Cond), w.BufferVisit(n.Post))
 		w.Visit(n.Body)
 		w.p.Print("\n")
 
 	case *ast.SwitchStmt:
+		w.p.Print("\n")
 		w.p.PrintSwitch(w.BufferVisit(n.Init), w.parseExpr(n.Tag))
 		w.Visit(n.Body)
 		w.p.Print("\n")
 
 	case *ast.TypeSwitchStmt:
+		w.p.Print("\n")
 		w.p.PrintSwitch(w.BufferVisit(n.Init), w.BufferVisit(n.Assign))
 		w.Visit(n.Body)
 		w.p.Print("\n")
@@ -140,6 +149,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.UpdateLevel(printer.DOWN)
 
 	case *ast.RangeStmt:
+		w.p.Print("\n")
 		w.p.PrintRange(w.parseExpr(n.Key), w.parseExpr(n.Value), w.parseExpr(n.X))
 		w.Visit(n.Body)
 		w.p.Print("\n")
@@ -157,7 +167,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.PrintReturn(w.parseExprList(n.Results), len(n.Results) > 1)
 
 	case *ast.ExprStmt:
-		w.p.PrintLevel(w.parseExpr(n.X), "\n")
+		w.p.PrintStmt("", w.parseExpr(n.X))
 
 	case *ast.DeclStmt:
 		w.Visit(n.Decl)
@@ -205,9 +215,9 @@ func (w *GoWalker) BufferVisit(node ast.Node) (ret string) {
 	ret = w.buffer.String()
 	w.buffer.Reset()
 
-	//if prev == true {
-	//    ret = strings.TrimSpace(ret)
-	//}
+	if prev == true {
+		ret = strings.TrimSpace(ret)
+	}
 
 	return
 }

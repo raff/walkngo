@@ -19,6 +19,10 @@ const (
 	CHAN_BIDI = "chan"
 	CHAN_SEND = "chan<-"
 	CHAN_RECV = "<-chan"
+
+	NONE = ""
+	NL   = "\n"
+	SEMI = ";\n"
 )
 
 //
@@ -28,8 +32,9 @@ type Printer interface {
 	SetWriter(w io.Writer)
 	UpdateLevel(delta int)
 	SameLine()
+	IsSameLine() bool
 	Print(values ...string)
-	PrintLevel(values ...string)
+	PrintLevel(term string, values ...string)
 
 	// print the package name
 	PrintPackage(name string)

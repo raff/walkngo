@@ -38,6 +38,10 @@ func (p *CPrinter) SameLine() {
 	p.sameline = true
 }
 
+func (p *CPrinter) IsSameLine() bool {
+	return p.sameline
+}
+
 func (p *CPrinter) indent() string {
 	if p.sameline {
 		p.sameline = false
@@ -51,37 +55,37 @@ func (p *CPrinter) Print(values ...string) {
 	fmt.Fprint(p.w, strings.Join(values, " "))
 }
 
-func (p *CPrinter) PrintLevel(values ...string) {
-	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "))
+func (p *CPrinter) PrintLevel(term string, values ...string) {
+	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "), term)
 }
 
-func (p *CPrinter) PrintLevelIn(values ...string) {
+func (p *CPrinter) PrintLevelIn(term string, values ...string) {
 	p.level -= 1
-	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "))
+	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "), term)
 	p.level += 1
 }
 
 func (p *CPrinter) PrintPackage(name string) {
-	p.PrintLevel("//package", name, "\n")
-	p.PrintLevel("#include <map>\n")
-	p.PrintLevel("#include <tuple>\n")
+	p.PrintLevel(NL, "//package", name)
+	p.PrintLevel(NL, "#include <map>")
+	p.PrintLevel(NL, "#include <tuple>")
 }
 
 func (p *CPrinter) PrintImport(name, path string) {
 	switch path {
 	case `"strings"`:
-		p.PrintLevel("#include <string>\n")
+		p.PrintLevel(NL, "#include <string>")
 	case `"sync"`:
-		p.PrintLevel("#include <mutex>\n")
-		p.PrintLevel("#include <condition_variable>\n")
+		p.PrintLevel(NL, "#include <mutex>")
+		p.PrintLevel(NL, "#include <condition_variable>")
 	default:
-		p.PrintLevel("//import", name, path, "\n")
+		p.PrintLevel(NL, "//import", name, path)
 	}
 
 }
 
 func (p *CPrinter) PrintType(name, typedef string) {
-	p.PrintLevel("typedef", typedef, name, ";\n")
+	p.PrintLevel(SEMI, "typedef", typedef, name)
 }
 
 func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtuple bool) {
@@ -99,7 +103,7 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 		names = fmt.Sprintf("std::tie(%s)", names)
 	}
 
-	p.PrintLevel(vtype, typedef, names)
+	p.PrintLevel(NONE, vtype, typedef, names)
 
 	if len(values) > 0 {
 		if vtuple {
@@ -112,7 +116,11 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 }
 
 func (p *CPrinter) PrintStmt(stmt, expr string) {
-	p.PrintLevel(stmt, expr, ";\n")
+	if len(stmt) > 0 {
+		p.PrintLevel(SEMI, stmt, expr)
+	} else {
+		p.PrintLevel(SEMI, expr)
+	}
 }
 
 func (p *CPrinter) PrintReturn(expr string, tuple bool) {
@@ -147,9 +155,9 @@ func (p *CPrinter) PrintFor(init, cond, post string) {
 
 	if onlycond {
 		// make it a while
-		p.PrintLevel("while (", cond)
+		p.PrintLevel(NONE, "while (", cond)
 	} else {
-		p.PrintLevel("for (")
+		p.PrintLevel(NONE, "for (")
 		if len(init) > 0 {
 			p.Print(init)
 		}
@@ -163,7 +171,7 @@ func (p *CPrinter) PrintFor(init, cond, post string) {
 }
 
 func (p *CPrinter) PrintRange(key, value, expr string) {
-	p.PrintLevel("for", key)
+	p.PrintLevel(NONE, "for", key)
 
 	if len(value) > 0 {
 		p.Print(",", value)
@@ -174,7 +182,7 @@ func (p *CPrinter) PrintRange(key, value, expr string) {
 }
 
 func (p *CPrinter) PrintSwitch(init, expr string) {
-	p.PrintLevel("switch ")
+	p.PrintLevel(NONE, "switch ")
 	if len(init) > 0 {
 		p.Print(init + "; ")
 	}
@@ -183,17 +191,17 @@ func (p *CPrinter) PrintSwitch(init, expr string) {
 
 func (p *CPrinter) PrintCase(expr string) {
 	if len(expr) > 0 {
-		p.PrintLevel("case", expr+":\n")
+		p.PrintLevel(NL, "case", expr+":")
 	} else {
-		p.PrintLevel("default:\n")
+		p.PrintLevel(NL, "default:")
 	}
 }
 
 func (p *CPrinter) PrintIf(init, cond string) {
 	if len(init) > 0 {
-		p.PrintLevel(init + " if ")
+		p.PrintLevel(NONE, init+" if ")
 	} else {
-		p.PrintLevel("if ")
+		p.PrintLevel(NONE, "if ")
 	}
 	p.Print("(", cond, ") ")
 }
@@ -203,7 +211,7 @@ func (p *CPrinter) PrintElse() {
 }
 
 func (p *CPrinter) PrintEmpty() {
-	p.PrintLevel(";\n")
+	p.PrintLevel(SEMI, "")
 }
 
 func (p *CPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
@@ -223,11 +231,11 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
 		rhs = fmt.Sprintf("std::make_tuple(%s)", rhs)
 	}
 
-	p.PrintLevel(lhs, op, rhs, ";\n")
+	p.PrintLevel(SEMI, lhs, op, rhs)
 }
 
 func (p *CPrinter) PrintSend(ch, value string) {
-	p.PrintLevel(fmt.Sprintf("Channel::Send(%s, %s)", ch, value))
+	p.PrintLevel(SEMI, fmt.Sprintf("Channel::Send(%s, %s)", ch, value))
 }
 
 func (p *CPrinter) FormatIdent(id string) (ret string) {

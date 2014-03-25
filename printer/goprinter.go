@@ -29,6 +29,10 @@ func (p *GoPrinter) SameLine() {
 	p.sameline = true
 }
 
+func (p *GoPrinter) IsSameLine() bool {
+	return p.sameline
+}
+
 func (p *GoPrinter) indent() string {
 	if p.sameline {
 		p.sameline = false
@@ -42,24 +46,24 @@ func (p *GoPrinter) Print(values ...string) {
 	fmt.Fprint(p.w, strings.Join(values, " "))
 }
 
-func (p *GoPrinter) PrintLevel(values ...string) {
-	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "))
+func (p *GoPrinter) PrintLevel(term string, values ...string) {
+	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "), term)
 }
 
 func (p *GoPrinter) PrintPackage(name string) {
-	p.PrintLevel("package", name, "\n")
+	p.PrintLevel(NL, "package", name)
 }
 
 func (p *GoPrinter) PrintImport(name, path string) {
-	p.PrintLevel("import", name, path, "\n")
+	p.PrintLevel(NL, "import", name, path)
 }
 
 func (p *GoPrinter) PrintType(name, typedef string) {
-	p.PrintLevel("type", name, typedef, "\n")
+	p.PrintLevel(NL, "type", name, typedef)
 }
 
 func (p *GoPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtuple bool) {
-	p.PrintLevel(vtype, names)
+	p.PrintLevel(NONE, vtype, names)
 	if len(typedef) > 0 {
 		p.Print(" ", typedef)
 	}
@@ -70,7 +74,11 @@ func (p *GoPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtu
 }
 
 func (p *GoPrinter) PrintStmt(stmt, expr string) {
-	p.PrintLevel(stmt, expr, "\n")
+	if len(stmt) > 0 {
+		p.PrintLevel(NL, stmt, expr)
+	} else {
+		p.PrintLevel(NL, expr)
+	}
 }
 
 func (p *GoPrinter) PrintReturn(expr string, tuple bool) {
@@ -78,7 +86,7 @@ func (p *GoPrinter) PrintReturn(expr string, tuple bool) {
 }
 
 func (p *GoPrinter) PrintFunc(receiver, name, params, results string) {
-	p.PrintLevel("func ")
+	p.PrintLevel(NONE, "func ")
 	if len(receiver) > 0 {
 		fmt.Fprintf(p.w, "(%s) ", receiver)
 	}
@@ -94,7 +102,7 @@ func (p *GoPrinter) PrintFunc(receiver, name, params, results string) {
 }
 
 func (p *GoPrinter) PrintFor(init, cond, post string) {
-	p.PrintLevel("for ")
+	p.PrintLevel(NONE, "for ")
 	if len(init) > 0 {
 		p.Print(init)
 	}
@@ -112,7 +120,7 @@ func (p *GoPrinter) PrintFor(init, cond, post string) {
 }
 
 func (p *GoPrinter) PrintRange(key, value, expr string) {
-	p.PrintLevel("for", key)
+	p.PrintLevel(NONE, "for", key)
 
 	if len(value) > 0 {
 		p.Print(",", value)
@@ -123,7 +131,7 @@ func (p *GoPrinter) PrintRange(key, value, expr string) {
 }
 
 func (p *GoPrinter) PrintSwitch(init, expr string) {
-	p.PrintLevel("switch ")
+	p.PrintLevel(NONE, "switch ")
 	if len(init) > 0 {
 		p.Print(init + "; ")
 	}
@@ -132,14 +140,14 @@ func (p *GoPrinter) PrintSwitch(init, expr string) {
 
 func (p *GoPrinter) PrintCase(expr string) {
 	if len(expr) > 0 {
-		p.PrintLevel("case", expr+":\n")
+		p.PrintLevel(SEMI, "case", expr)
 	} else {
-		p.PrintLevel("default:\n")
+		p.PrintLevel(NL, "default:")
 	}
 }
 
 func (p *GoPrinter) PrintIf(init, cond string) {
-	p.PrintLevel("if ")
+	p.PrintLevel(NONE, "if ")
 	if len(init) > 0 {
 		p.Print(init + "; ")
 	}
@@ -151,15 +159,15 @@ func (p *GoPrinter) PrintElse() {
 }
 
 func (p *GoPrinter) PrintEmpty() {
-	p.PrintLevel(";\n")
+	p.PrintLevel(SEMI, "")
 }
 
 func (p *GoPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
-	p.PrintLevel(lhs, op, rhs, "\n")
+	p.PrintLevel(NL, lhs, op, rhs)
 }
 
 func (p *GoPrinter) PrintSend(ch, value string) {
-	p.PrintLevel(ch, "<-", value)
+	p.PrintLevel(SEMI, ch, "<-", value)
 }
 
 func (p *GoPrinter) FormatIdent(id string) string {
