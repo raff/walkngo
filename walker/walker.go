@@ -146,6 +146,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		for _, i := range n.Body {
 			w.Visit(i)
 		}
+		w.p.PrintEndCase()
 		w.p.UpdateLevel(printer.DOWN)
 
 	case *ast.RangeStmt:
@@ -176,7 +177,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.PrintAssignment(w.parseExprList(n.Lhs), n.Tok.String(), w.parseExprList(n.Rhs), len(n.Lhs) > 1, len(n.Rhs) > 1)
 
 	case *ast.IncDecStmt:
-		w.p.PrintLevel(w.parseExpr(n.X)+n.Tok.String(), " ")
+		w.p.PrintStmt("", w.parseExpr(n.X)+n.Tok.String())
 
 	case *ast.SendStmt:
 		w.p.PrintSend(w.parseExpr(n.Chan), w.parseExpr(n.Value))
@@ -257,14 +258,14 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 		w.p.UpdateLevel(printer.UP)
 		ret := w.p.FormatInterface(w.parseFieldList(expr.Methods, printer.METHOD))
 		w.p.UpdateLevel(printer.DOWN)
-        return ret
+		return ret
 
 		// struct{ things }
 	case *ast.StructType:
 		w.p.UpdateLevel(printer.UP)
 		ret := w.p.FormatStruct(w.parseFieldList(expr.Fields, printer.FIELD))
 		w.p.UpdateLevel(printer.DOWN)
-        return ret
+		return ret
 
 		// <-chan type
 	case *ast.ChanType:
@@ -347,7 +348,7 @@ func (w *GoWalker) parseExprList(l []ast.Expr) string {
 }
 
 func (w *GoWalker) parseFieldList(l *ast.FieldList, ftype printer.FieldType) string {
-    sep := w.p.GetSeparator(ftype)
+	sep := w.p.GetSeparator(ftype)
 
 	if l != nil {
 		fields := []string{}
