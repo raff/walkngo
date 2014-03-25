@@ -13,6 +13,18 @@ The main program accepts a -c boolean argument to select the output (c=true for 
 
     walkngo -c walkngo.go
 
+Usage:
+======
+
+    walkngo [--c] [--debug] [--outdir={output-folder}] file.go|folder
+
+Where:
+    --c : convert to C/C++ (or re-generate a "Go" file if --c==false or if the option is missing)
+    --debug : print out AST nodes for debugging
+    --outdir={output-folder} : creates output files in output-folder following original paths
+
+If a folder is specified as input, the program will "walk" the directory structure and convert all files with extension ".go" (it skips folders with name starting with ".")
+
 Note:
 =====
 
