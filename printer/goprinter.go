@@ -34,11 +34,11 @@ func (p *GoPrinter) IsSameLine() bool {
 }
 
 func (p *GoPrinter) GetSeparator(ftype FieldType) string {
-    if ftype == METHOD || ftype == FIELD {
-        return ";\n" + p.indent()
-    } else {
-        return ", "
-    }
+	if ftype == METHOD || ftype == FIELD {
+		return ";\n" + p.indent()
+	} else {
+		return ", "
+	}
 }
 
 func (p *GoPrinter) indent() string {
@@ -152,6 +152,10 @@ func (p *GoPrinter) PrintCase(expr string) {
 	} else {
 		p.PrintLevel(NL, "default:")
 	}
+}
+
+func (p *GoPrinter) PrintEndCase() {
+	// nothing to do
 }
 
 func (p *GoPrinter) PrintIf(init, cond string) {

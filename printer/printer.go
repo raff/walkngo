@@ -35,7 +35,7 @@ type Printer interface {
 	IsSameLine() bool
 	Print(values ...string)
 	PrintLevel(term string, values ...string)
-    GetSeparator(f FieldType) string
+	GetSeparator(f FieldType) string
 
 	// print the package name
 	PrintPackage(name string)
@@ -69,6 +69,9 @@ type Printer interface {
 
 	// print a "case" opening statement
 	PrintCase(expr string)
+
+	// print a "case" closing statement (break, if needed)
+	PrintEndCase()
 
 	// print an "if" opening statement
 	PrintIf(init, cond string)

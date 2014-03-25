@@ -43,11 +43,11 @@ func (p *CPrinter) IsSameLine() bool {
 }
 
 func (p *CPrinter) GetSeparator(ftype FieldType) string {
-    if ftype == METHOD || ftype == FIELD {
-        return ";\n" + p.indent()
-    } else {
-        return ", "
-    }
+	if ftype == METHOD || ftype == FIELD {
+		return ";\n" + p.indent()
+	} else {
+		return ", "
+	}
 }
 
 func (p *CPrinter) indent() string {
@@ -79,7 +79,7 @@ func (p *CPrinter) PrintPackage(name string) {
 }
 
 func (p *CPrinter) PrintImport(name, path string) {
-    p.PrintLevel(NL, "//import", name, path)
+	p.PrintLevel(NL, "//import", name, path)
 }
 
 func (p *CPrinter) PrintType(name, typedef string) {
@@ -130,29 +130,29 @@ func (p *CPrinter) PrintReturn(expr string, tuple bool) {
 }
 
 func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
-        if len(receiver) == 0 && len(params) == 0 && len(results) == 0 && name == "main" {
-            // the "main"
-            results = "int"
-            params = "int argc, char **argv"
-        } else {
-            if len(results) == 0 {
-                    results = "void"
-            } else if IsMultiValue(results) {
-                    results = fmt.Sprintf("tuple<%s>", results)
-            }
+	if len(receiver) == 0 && len(params) == 0 && len(results) == 0 && name == "main" {
+		// the "main"
+		results = "int"
+		params = "int argc, char **argv"
+	} else {
+		if len(results) == 0 {
+			results = "void"
+		} else if IsMultiValue(results) {
+			results = fmt.Sprintf("tuple<%s>", results)
+		}
 
-            if len(receiver) > 0 {
-                    parts := strings.SplitN(receiver, " ", 2)
-                    receiver = "/* " + parts[1] + " */ " + parts[0] + "::"
-            }
-        }
+		if len(receiver) > 0 {
+			parts := strings.SplitN(receiver, " ", 2)
+			receiver = "/* " + parts[1] + " */ " + parts[0] + "::"
+		}
+	}
 
 	fmt.Fprintf(p.w, "%s %s%s(%s) ", results, receiver, name, params)
 }
 
 func (p *CPrinter) PrintFor(init, cond, post string) {
-        init = strings.TrimRight(init, SEMI)
-        post = strings.TrimRight(post, SEMI)
+	init = strings.TrimRight(init, SEMI)
+	post = strings.TrimRight(post, SEMI)
 
 	onlycond := len(init) == 0 && len(post) == 0
 
@@ -201,6 +201,10 @@ func (p *CPrinter) PrintCase(expr string) {
 	} else {
 		p.PrintLevel(NL, "default:")
 	}
+}
+
+func (p *CPrinter) PrintEndCase() {
+	p.PrintLevel(SEMI, "break") // XXX: need to check for previous fallthrough
 }
 
 func (p *CPrinter) PrintIf(init, cond string) {
@@ -399,9 +403,9 @@ func (p *CPrinter) FormatCall(fun, args string) string {
 		fun = "printf"
 	case "fmt.Fprintln":
 		fun = "fputs"
-        case "fmt.Print", "print":
-                fun = "printf"
-                args = fmt.Sprintf(`"%%s", %s`, args)
+	case "fmt.Print", "print":
+		fun = "printf"
+		args = fmt.Sprintf(`"%%s", %s`, args)
 	case "fmt.Println", "println":
 		fun = "puts"
 	case "os.Open":
