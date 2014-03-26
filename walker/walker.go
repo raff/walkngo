@@ -317,7 +317,7 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// package.member
 	case *ast.SelectorExpr:
-		return fmt.Sprintf("%s.%s", w.parseExpr(expr.X), w.parseExpr(expr.Sel))
+		return w.p.FormatSelector(w.parseExpr(expr.X), w.parseExpr(expr.Sel))
 
 		// funcname(args)
 	case *ast.CallExpr:

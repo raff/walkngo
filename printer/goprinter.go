@@ -271,3 +271,7 @@ func (p *GoPrinter) FormatFuncType(params, results string) string {
 func (p *GoPrinter) FormatFuncLit(ftype, body string) string {
 	return fmt.Sprintf("func%s %s", ftype, body)
 }
+
+func (p *GoPrinter) FormatSelector(pname, sel string) string {
+	return fmt.Sprintf("%s.%s", pname, sel)
+}

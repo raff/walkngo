@@ -79,7 +79,12 @@ func (p *CPrinter) PrintImport(name, path string) {
 }
 
 func (p *CPrinter) PrintType(name, typedef string) {
-	p.PrintLevel(SEMI, "typedef", typedef, name)
+	if strings.Contains(typedef, "%") {
+		// FuncType
+		p.PrintLevel(SEMI, "typedef", fmt.Sprintf(typedef, "("+name+")"))
+	} else {
+		p.PrintLevel(SEMI, "typedef", typedef, name)
+	}
 }
 
 func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtuple bool) {
@@ -317,7 +322,11 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 	}
 
 	if t == METHOD {
-		ret = "virtual " + fmt.Sprintf(value, name)
+		if len(name) == 0 {
+			ret = fmt.Sprintf("// extends %s", value)
+		} else {
+			ret = "virtual " + fmt.Sprintf(value, name)
+		}
 	} else if t == RESULT && len(name) > 0 {
 		ret = fmt.Sprintf("%s /* %s */", value, name)
 	} else if len(name) > 0 && len(value) > 0 {
@@ -424,6 +433,10 @@ func (p *CPrinter) FormatFuncType(params, results string) string {
 
 func (p *CPrinter) FormatFuncLit(ftype, body string) string {
 	return fmt.Sprintf(ftype+" %s", "func", body)
+}
+
+func (p *CPrinter) FormatSelector(pname, sel string) string {
+	return fmt.Sprintf("%s::%s", pname, sel)
 }
 
 //

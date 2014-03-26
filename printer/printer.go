@@ -122,6 +122,8 @@ type Printer interface {
 	FormatFuncType(params, results string) string
 
 	FormatFuncLit(ftype, body string) string
+
+	FormatSelector(pname, sel string) string
 }
 
 //
