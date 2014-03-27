@@ -435,8 +435,12 @@ func (p *CPrinter) FormatFuncLit(ftype, body string) string {
 	return fmt.Sprintf(ftype+" %s", "func", body)
 }
 
-func (p *CPrinter) FormatSelector(pname, sel string) string {
-	return fmt.Sprintf("%s::%s", pname, sel)
+func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {
+	if isObject {
+		return fmt.Sprintf("%s.%s", pname, sel)
+	} else {
+		return fmt.Sprintf("%s::%s", pname, sel)
+	}
 }
 
 //

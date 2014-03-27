@@ -123,7 +123,7 @@ type Printer interface {
 
 	FormatFuncLit(ftype, body string) string
 
-	FormatSelector(pname, sel string) string
+	FormatSelector(pname, sel string, isObject bool) string
 }
 
 //

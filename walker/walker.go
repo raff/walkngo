@@ -317,7 +317,12 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// package.member
 	case *ast.SelectorExpr:
-		return w.p.FormatSelector(w.parseExpr(expr.X), w.parseExpr(expr.Sel))
+		ident, isObj := expr.X.(*ast.Ident)
+		if isObj {
+			isObj = ident.Obj != nil
+		}
+
+		return w.p.FormatSelector(w.parseExpr(expr.X), w.parseExpr(expr.Sel), isObj)
 
 		// funcname(args)
 	case *ast.CallExpr:
