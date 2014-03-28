@@ -1,40 +1,41 @@
+#ifndef _GO_RUNTIME_SYNC_H
+#define _GO_RUNTIME_SYNC_H
+
 #include <mutex>
 #include <condition_variable>
 
-using namespace std;
+namespace sync {
+    class Mutex : private std::mutex {
+        friend class Cond;
+    public:
+        void Lock() {
+            std::mutex::lock();
+        }
 
-class Mutex {
-    friend class Cond;
-private:
-    mutex m;
-public:
-    void Lock() {
-        m.lock();
-    }
+        void Unlock() {
+            std::mutex::unlock();
+        }
+    };
 
-    void Unlock() {
-        m.unlock();
-    }
-};
+    class Cond {
+    private:
+        std::condition_variable_any cv;
+    public:
+        Mutex *L;
+        Cond(Mutex &m) : L(&m) {}
 
-class Cond {
-private:
-    condition_variable cv;
-public:
-    Mutex *L;
+        void Wait() {
+            cv.wait(static_cast<std::mutex&>(*L));
+        }
 
-    Cond(Mutex &m) : L(&m) {}
+        void Signal() {
+            cv.notify_one();
+        }
 
-    void Wait() {
-        unique_lock<mutex> lk(L->m);
-        cv.wait(lk);
-    }
+        void Broadcast() {
+            cv.notify_all();
+        }
+    };
+}
 
-    void Signal() {
-        cv.notify_one();
-    }
-
-    void Broadcast() {
-        cv.notify_all();
-    }
-};
+#endif
