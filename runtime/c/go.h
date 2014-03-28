@@ -25,7 +25,18 @@ typedef double float64;
 typedef uint8 byte;
 typedef int32 rune;
 
-typedef string error;
+class error {
+private:
+    string s;
+public:
+    error(message string) {
+        s = message
+    }
+
+    string Error() {
+        return s;
+    }
+}
 
 inline void panic(string &arg) {
     cerr << "panic: " << arg << endl;
