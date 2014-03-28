@@ -1,3 +1,6 @@
+#ifndef _GO_RUNTIME_H
+#define _GO_RUNTIME_H 1
+
 #include <iostream>
 #include <map>
 #include <string>
@@ -29,3 +32,5 @@ inline void panic(string &arg) {
     char *paniker = 0;
     *paniker = 0;
 }
+
+#endif

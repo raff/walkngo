@@ -36,6 +36,32 @@ namespace sync {
             cv.notify_all();
         }
     };
+
+    class WaitGroup {
+    private:
+        std::mutex m;
+        std::condition_variable cv;
+        int waiters;
+    public:
+        void Add(int delta) {
+            std::unique_lock<std::mutex> lk(m);
+            waiters += delta;
+            if (waiters <= 0) {
+                // this should panic if waiters < 0
+                // but let's start with this
+                cv.notify_all();
+            }
+        }
+
+        void Done() {
+            Add(-1);
+        }
+
+        void Wait() {
+            std::unique_lock<std::mutex> lk(m);
+            while (waiters > 0) cv.wait(lk);
+        }
+    };
 }
 
 #endif
