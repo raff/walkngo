@@ -76,6 +76,14 @@ func (p *CPrinter) PrintPackage(name string) {
 
 func (p *CPrinter) PrintImport(name, path string) {
 	p.PrintLevel(NL, "//import", name, path)
+
+	switch path {
+	case `"sync"`:
+		p.PrintLevel(NL, "#include <sync.h>")
+
+	case `"errors"`:
+		p.PrintLevel(NL, "#include <errors.h>")
+	}
 }
 
 func (p *CPrinter) PrintType(name, typedef string) {
@@ -399,7 +407,7 @@ func (p *CPrinter) FormatChan(chdir, mtype string) string {
 	return fmt.Sprintf("%s<%s>", chtype, mtype)
 }
 
-func (p *CPrinter) FormatCall(fun, args string) string {
+func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 	switch fun {
 	case "fmt.Sprintf":
 		fun = "sprintf"
@@ -418,7 +426,11 @@ func (p *CPrinter) FormatCall(fun, args string) string {
 		fun = "open"
 	}
 
-	return fmt.Sprintf("%s(%s)", fun, args)
+	if isFuncLit {
+		return fmt.Sprintf("[%s]%s", args, fun)
+	} else {
+		return fmt.Sprintf("%s(%s)", fun, args)
+	}
 }
 
 func (p *CPrinter) FormatFuncType(params, results string) string {
@@ -432,7 +444,7 @@ func (p *CPrinter) FormatFuncType(params, results string) string {
 }
 
 func (p *CPrinter) FormatFuncLit(ftype, body string) string {
-	return fmt.Sprintf(ftype+" %s", "func", body)
+	return fmt.Sprintf(ftype+"%s", "", body)
 }
 
 func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {

@@ -117,7 +117,7 @@ type Printer interface {
 
 	FormatChan(chdir, mtype string) string
 
-	FormatCall(fun, args string) string
+	FormatCall(fun, args string, isFuncLit bool) string
 
 	FormatFuncType(params, results string) string
 

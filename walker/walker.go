@@ -326,7 +326,8 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// funcname(args)
 	case *ast.CallExpr:
-		return w.p.FormatCall(w.parseExpr(expr.Fun), w.parseExprList(expr.Args)+ifTrue("...", expr.Ellipsis > 0))
+		_, funclit := expr.Fun.(*ast.FuncLit)
+		return w.p.FormatCall(w.parseExpr(expr.Fun), w.parseExprList(expr.Args)+ifTrue("...", expr.Ellipsis > 0), funclit)
 
 		// name.(type)
 	case *ast.TypeAssertExpr:

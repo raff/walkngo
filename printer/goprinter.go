@@ -249,7 +249,7 @@ func (p *GoPrinter) FormatChan(chdir, mtype string) string {
 	return fmt.Sprintf("%s %s", chdir, mtype)
 }
 
-func (p *GoPrinter) FormatCall(fun, args string) string {
+func (p *GoPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 	return fmt.Sprintf("%s(%s)", fun, args)
 }
 
