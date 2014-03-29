@@ -186,6 +186,22 @@ func (p *GoPrinter) FormatLiteral(lit string) string {
 	return lit
 }
 
+func (p *GoPrinter) FormatCompositeLit(typedef, elt string) string {
+	return fmt.Sprintf("%s{%s}", typedef, elt)
+}
+
+func (p *GoPrinter) FormatEllipsis(expr string) string {
+	return fmt.Sprintf("...%s", expr)
+}
+
+func (p *GoPrinter) FormatStar(expr string) string {
+	return fmt.Sprintf("*%s", expr)
+}
+
+func (p *GoPrinter) FormatParen(expr string) string {
+	return fmt.Sprintf("(%s)")
+}
+
 func (p *GoPrinter) FormatUnary(op, operand string) string {
 	return fmt.Sprintf("%s%s", op, operand)
 }
@@ -274,4 +290,8 @@ func (p *GoPrinter) FormatFuncLit(ftype, body string) string {
 
 func (p *GoPrinter) FormatSelector(pname, sel string, isObject bool) string {
 	return fmt.Sprintf("%s.%s", pname, sel)
+}
+
+func (p *GoPrinter) FormatTypeAssert(orig, assert string) string {
+	return fmt.Sprintf("%s.(%s)", orig, assert)
 }

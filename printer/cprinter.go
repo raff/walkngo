@@ -298,6 +298,22 @@ func (p *CPrinter) FormatLiteral(lit string) string {
 	return lit
 }
 
+func (p *CPrinter) FormatCompositeLit(typedef, elt string) string {
+	return fmt.Sprintf("%s{%s}", typedef, elt)
+}
+
+func (p *CPrinter) FormatEllipsis(expr string) string {
+	return fmt.Sprintf("...%s", expr)
+}
+
+func (p *CPrinter) FormatStar(expr string) string {
+	return "*" + expr
+}
+
+func (p *CPrinter) FormatParen(expr string) string {
+	return fmt.Sprintf("(%s)")
+}
+
 func (p *CPrinter) FormatUnary(op, operand string) string {
 	if op == "<-" {
 		return fmt.Sprintf("Channel::Receive(%s)", operand)
@@ -464,6 +480,10 @@ func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {
 	} else {
 		return fmt.Sprintf("%s::%s", pname, sel)
 	}
+}
+
+func (p *CPrinter) FormatTypeAssert(orig, assert string) string {
+	return fmt.Sprintf("%s.(%s)", orig, assert)
 }
 
 //

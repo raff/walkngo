@@ -95,6 +95,14 @@ type Printer interface {
 
 	FormatLiteral(lit string) string
 
+	FormatCompositeLit(typedef, elt string) string
+
+	FormatStar(expr string) string
+
+	FormatEllipsis(expr string) string
+
+	FormatParen(expr string) string
+
 	FormatUnary(op, operand string) string
 
 	FormatBinary(lhs, op, rhs string) string
@@ -124,6 +132,8 @@ type Printer interface {
 	FormatFuncLit(ftype, body string) string
 
 	FormatSelector(pname, sel string, isObject bool) string
+
+	FormatTypeAssert(orig, assert string) string
 }
 
 //

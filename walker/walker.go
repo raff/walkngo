@@ -243,7 +243,7 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// *thing
 	case *ast.StarExpr:
-		return "*" + w.parseExpr(expr.X)
+		return w.p.FormatStar(w.parseExpr(expr.X))
 
 		// [len]type
 	case *ast.ArrayType:
@@ -289,11 +289,11 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// type{list}
 	case *ast.CompositeLit:
-		return fmt.Sprintf("%s{%s}", w.parseExpr(expr.Type), w.parseExprList(expr.Elts))
+		return w.p.FormatCompositeLit(w.parseExpr(expr.Type), w.parseExprList(expr.Elts))
 
 		// ...type
 	case *ast.Ellipsis:
-		return fmt.Sprintf("...%s", w.parseExpr(expr.Elt))
+		return w.p.FormatEllipsis(w.parseExpr(expr.Elt))
 
 		// -3
 	case *ast.UnaryExpr:
@@ -321,7 +321,6 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 		if isObj {
 			isObj = ident.Obj != nil
 		}
-
 		return w.p.FormatSelector(w.parseExpr(expr.X), w.parseExpr(expr.Sel), isObj)
 
 		// funcname(args)
@@ -331,11 +330,11 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// name.(type)
 	case *ast.TypeAssertExpr:
-		return fmt.Sprintf("%s.(%s)", w.parseExpr(expr.X), w.exprOr(expr.Type, "type"))
+		return w.p.FormatTypeAssert(w.parseExpr(expr.X), w.exprOr(expr.Type, "type"))
 
 		// (expr)
 	case *ast.ParenExpr:
-		return fmt.Sprintf("(%s)", w.parseExpr(expr.X))
+		return w.p.FormatParen(w.parseExpr(expr.X))
 
 		// func(params) (ret) { body }
 	case *ast.FuncLit:
