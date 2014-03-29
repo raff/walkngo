@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <tuple>
+#include <thread>
 
 // for string, map, etc.
 using namespace std;
@@ -29,19 +30,24 @@ class error {
 private:
     string s;
 public:
-    error(message string) {
-        s = message
+    error(string message) {
+        s = message;
     }
 
     string Error() {
         return s;
     }
-}
+};
 
 inline void panic(string &arg) {
     cerr << "panic: " << arg << endl;
     char *paniker = 0;
     *paniker = 0;
+}
+
+inline void GoCall(function<void()> const& fun) {
+    thread t(fun);
+    t.detach();
 }
 
 #endif
