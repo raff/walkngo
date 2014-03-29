@@ -83,6 +83,9 @@ func (p *CPrinter) PrintImport(name, path string) {
 
 	case `"errors"`:
 		p.PrintLevel(NL, "#include <errors.h>")
+
+	case `"time"`:
+		p.PrintLevel(NL, "#include <go_time.h>")
 	}
 }
 
@@ -128,7 +131,10 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 }
 
 func (p *CPrinter) PrintStmt(stmt, expr string) {
-	if len(stmt) > 0 {
+	if stmt == "go" {
+		// start a goroutine (or a thread)
+		p.PrintLevel(SEMI, fmt.Sprintf("GoCall([](){ %s; })", expr))
+	} else if len(stmt) > 0 {
 		p.PrintLevel(SEMI, stmt, expr)
 	} else {
 		p.PrintLevel(SEMI, expr)
@@ -409,21 +415,26 @@ func (p *CPrinter) FormatChan(chdir, mtype string) string {
 
 func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 	switch fun {
-	case "fmt.Sprintf":
+	case "fmt::Sprintf":
 		fun = "sprintf"
-	case "fmt.Fprintf":
+	case "fmt::Fprintf":
 		fun = "fprintf"
-	case "fmt.Printf":
+	case "fmt::Printf":
 		fun = "printf"
-	case "fmt.Fprintln":
+	case "fmt::Fprintln":
 		fun = "fputs"
-	case "fmt.Print", "print":
+	case "fmt::Print", "print":
 		fun = "printf"
 		args = fmt.Sprintf(`"%%s", %s`, args)
-	case "fmt.Println", "println":
+	case "fmt::Println", "println":
 		fun = "puts"
-	case "os.Open":
+	case "os::Open":
 		fun = "open"
+	default:
+		if strings.HasPrefix(fun, "time::") {
+			// need to rename :(
+			fun = "go_" + fun
+		}
 	}
 
 	if isFuncLit {
