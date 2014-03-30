@@ -78,6 +78,9 @@ func (p *CPrinter) PrintImport(name, path string) {
 	p.PrintLevel(NL, "//import", name, path)
 
 	switch path {
+	case `"fmt"`:
+		p.PrintLevel(NL, "#include <fmt.h>")
+
 	case `"sync"`:
 		p.PrintLevel(NL, "#include <sync.h>")
 
