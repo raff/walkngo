@@ -5,7 +5,10 @@
 #include <map>
 #include <string>
 #include <tuple>
+#include <queue>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 typedef unsigned char      uint8;
 typedef unsigned short int uint16;
@@ -31,20 +34,59 @@ public:
         s = message;
     }
 
-    string Error() {
+    std::string Error() {
         return s;
     }
 };
 
 inline void panic(std::string &arg) {
-    cerr << "panic: " << arg << endl;
+    std::cerr << "panic: " << arg << std::endl;
     char *paniker = 0;
     *paniker = 0;
 }
 
-inline void GoCall(function<void()> const& fun) {
-    thread t(fun);
+inline void Goroutine(std::function<void()> const& fun) {
+    std::thread t(fun);
     t.detach();
 }
 
+template<class T> class Chan {
+private:
+    std::queue<T> buffer;
+    int size;
+    std::mutex m;
+    std::condition_variable send_cond;
+    std::condition_variable recv_cond;
+
+public:
+    Chan() : size(1) {
+    }
+
+    Chan(int n) : size(n) {
+    }
+
+    void Send(T value) {
+        std::unique_lock<std::mutex> lk(m);
+
+        while (buffer.size() >= size) {
+            send_cond.wait(lk);
+        }
+
+        buffer.push(value);
+        recv_cond.notify_one();
+    }
+
+    T Receive() {
+        std::unique_lock<std::mutex> lk(m);
+
+        while (buffer.empty()) {
+            recv_cond.wait(lk);
+        }
+
+        T ret = buffer.front();
+        buffer.pop();
+        send_cond.notify_one();
+        return ret;
+    }
+};
 #endif
