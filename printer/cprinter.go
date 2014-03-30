@@ -278,7 +278,7 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
 }
 
 func (p *CPrinter) PrintSend(ch, value string) {
-	p.PrintLevel(SEMI, fmt.Sprintf("Channel::Send(%s, %s)", ch, value))
+	p.PrintLevel(SEMI, fmt.Sprintf("%s.Send(%s)", ch, value))
 }
 
 func (p *CPrinter) FormatIdent(id string) (ret string) {
@@ -329,7 +329,7 @@ func (p *CPrinter) FormatParen(expr string) string {
 
 func (p *CPrinter) FormatUnary(op, operand string) string {
 	if op == "<-" {
-		return fmt.Sprintf("Channel::Receive(%s)", operand)
+		return fmt.Sprintf("%s.Receive()", operand)
 	}
 
 	return fmt.Sprintf("%s%s", op, operand)
@@ -432,11 +432,11 @@ func (p *CPrinter) FormatChan(chdir, mtype string) string {
 
 	switch chdir {
 	case CHAN_BIDI:
-		chtype = "Channel::Chan"
+		chtype = "Chan"
 	case CHAN_SEND:
-		chtype = "Channel::SendChan"
+		chtype = "SendChan"
 	case CHAN_RECV:
-		chtype = "Channel::ReceiveChan"
+		chtype = "ReceiveChan"
 	}
 
 	return fmt.Sprintf("%s<%s>", chtype, mtype)

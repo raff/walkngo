@@ -78,7 +78,7 @@ func main() {
 
 	if *clang {
 		p = &printer.CPrinter{}
-		lang = "c"
+		lang = "cc"
 	} else {
 		p = &printer.GoPrinter{}
 	}
