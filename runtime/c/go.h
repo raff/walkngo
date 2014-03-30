@@ -7,9 +7,6 @@
 #include <tuple>
 #include <thread>
 
-// for string, map, etc.
-using namespace std;
-
 typedef unsigned char      uint8;
 typedef unsigned short int uint16;
 typedef unsigned int       uint32;
@@ -28,9 +25,9 @@ typedef int32 rune;
 
 class error {
 private:
-    string s;
+    std::string s;
 public:
-    error(string message) {
+    error(std::string message) {
         s = message;
     }
 
@@ -39,7 +36,7 @@ public:
     }
 };
 
-inline void panic(string &arg) {
+inline void panic(std::string &arg) {
     cerr << "panic: " << arg << endl;
     char *paniker = 0;
     *paniker = 0;

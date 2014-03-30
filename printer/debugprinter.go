@@ -41,70 +41,87 @@ func (d *DebugPrinter) PrintLevel(term string, values ...string) {
 }
 
 func (d *DebugPrinter) PrintPackage(name string) {
+	fmt.Println("/* PrintPackage", name, "*/")
 	d.P.PrintPackage(name)
 }
 
 func (d *DebugPrinter) PrintImport(name, path string) {
+	fmt.Println("/* PrintImport", name, path, "*/")
 	d.P.PrintImport(name, path)
 }
 
 func (d *DebugPrinter) PrintType(name, typedef string) {
+	fmt.Println("/* PrintType", name, typedef, "*/")
 	d.P.PrintType(name, typedef)
 }
 
 func (d *DebugPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtuple bool) {
+	fmt.Println("/* PrintValue", vtype, typedef, names, values, ntuple, vtuple, "*/")
 	d.P.PrintValue(vtype, typedef, names, values, ntuple, vtuple)
 }
 
 func (d *DebugPrinter) PrintStmt(stmt, expr string) {
+	fmt.Println("/* PrintStmt", stmt, expr, "*/")
 	d.P.PrintStmt(stmt, expr)
 }
 
 func (d *DebugPrinter) PrintReturn(expr string, tuple bool) {
+	fmt.Println("/* PrintReturn", expr, tuple, "*/")
 	d.P.PrintReturn(expr, tuple)
 }
 
 func (d *DebugPrinter) PrintFunc(receiver, name, params, results string) {
+	fmt.Println("/* PrintFunc", receiver, name, params, results, "*/")
 	d.P.PrintFunc(receiver, name, params, results)
 }
 
 func (d *DebugPrinter) PrintFor(init, cond, post string) {
+	fmt.Println("/* PrintFor", init, cond, post, "*/")
 	d.P.PrintFor(init, cond, post)
 }
 
 func (d *DebugPrinter) PrintRange(key, value, expr string) {
+	fmt.Println("/* PrintRange", key, value, expr, "*/")
 	d.P.PrintRange(key, value, expr)
 }
 
 func (d *DebugPrinter) PrintSwitch(init, expr string) {
+	fmt.Println("/* PrintSwitch", init, expr, "*/")
 	d.P.PrintSwitch(init, expr)
 }
 
 func (d *DebugPrinter) PrintCase(expr string) {
+	fmt.Println("/* PrintCase", expr, "*/")
 	d.P.PrintCase(expr)
 }
 
 func (d *DebugPrinter) PrintEndCase() {
+	fmt.Println("/* PrintEndCase", "*/")
 	d.P.PrintEndCase()
 }
 
 func (d *DebugPrinter) PrintIf(init, cond string) {
+	fmt.Println("/* PrintIf", init, cond, "*/")
 	d.P.PrintIf(init, cond)
 }
 
 func (d *DebugPrinter) PrintElse() {
+	fmt.Println("/* PrintElse", "*/")
 	d.P.PrintElse()
 }
 
 func (d *DebugPrinter) PrintEmpty() {
+	fmt.Println("/* PrintEmpty", "*/")
 	d.P.PrintEmpty()
 }
 
 func (d *DebugPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
+	fmt.Println("/* PrintAssignment", lhs, op, rhs, ltuple, rtuple, "*/")
 	d.P.PrintAssignment(lhs, op, rhs, ltuple, rtuple)
 }
 
 func (d *DebugPrinter) PrintSend(ch, value string) {
+	fmt.Println("/* PrintSend", ch, value, "*/")
 	d.P.PrintSend(ch, value)
 }
 
