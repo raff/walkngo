@@ -314,7 +314,7 @@ func (p *CPrinter) FormatStar(expr string) string {
 }
 
 func (p *CPrinter) FormatParen(expr string) string {
-	return fmt.Sprintf("(%s)")
+	return fmt.Sprintf("(%s)", expr)
 }
 
 func (p *CPrinter) FormatUnary(op, operand string) string {

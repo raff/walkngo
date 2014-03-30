@@ -199,7 +199,7 @@ func (p *GoPrinter) FormatStar(expr string) string {
 }
 
 func (p *GoPrinter) FormatParen(expr string) string {
-	return fmt.Sprintf("(%s)")
+	return fmt.Sprintf("(%s)", expr)
 }
 
 func (p *GoPrinter) FormatUnary(op, operand string) string {
@@ -275,7 +275,7 @@ func (p *GoPrinter) FormatFuncType(params, results string) string {
 		return fmt.Sprintf("(%s)", params)
 	}
 
-	if strings.ContainsAny(results, " ,") {
+	if strings.ContainsAny(results, ", ") {
 		// name type or multiple types
 		return fmt.Sprintf("(%s) (%s)", params, results)
 	}
