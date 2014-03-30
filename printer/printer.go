@@ -38,6 +38,12 @@ type Printer interface {
 	PrintLevel(term string, values ...string)
 	Chop(line string) string
 
+	// print start block "{"
+	PrintBlockStart()
+
+	// print end block "}"
+	PrintBlockEnd()
+
 	// print the package name
 	PrintPackage(name string)
 

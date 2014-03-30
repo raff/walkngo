@@ -54,6 +54,16 @@ func (p *GoPrinter) PrintLevel(term string, values ...string) {
 	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "), term)
 }
 
+func (p *GoPrinter) PrintBlockStart() {
+	p.PrintLevel("{\n")
+	p.UpdateLevel(UP)
+}
+
+func (p *GoPrinter) PrintBlockEnd() {
+	p.UpdateLevel(DOWN)
+	p.PrintLevel("}")
+}
+
 func (p *GoPrinter) PrintPackage(name string) {
 	p.PrintLevel(NL, "package", name)
 }

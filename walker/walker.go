@@ -99,13 +99,11 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.Print("\n")
 
 	case *ast.BlockStmt:
-		w.p.PrintLevel("{\n")
-		w.p.UpdateLevel(printer.UP)
+		w.p.PrintBlockStart()
 		for _, i := range n.List {
 			w.Visit(i)
 		}
-		w.p.UpdateLevel(printer.DOWN)
-		w.p.PrintLevel("}")
+		w.p.PrintBlockEnd()
 
 	case *ast.IfStmt:
 		if !w.p.IsSameLine() {

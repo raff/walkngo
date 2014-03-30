@@ -69,6 +69,16 @@ func (p *CPrinter) PrintLevelIn(term string, values ...string) {
 	p.level += 1
 }
 
+func (p *CPrinter) PrintBlockStart() {
+	p.PrintLevel("{\n")
+	p.UpdateLevel(UP)
+}
+
+func (p *CPrinter) PrintBlockEnd() {
+	p.UpdateLevel(DOWN)
+	p.PrintLevel("}")
+}
+
 func (p *CPrinter) PrintPackage(name string) {
 	p.PrintLevel(NL, "//package", name)
 	p.PrintLevel(NL, "#include <go.h>")
@@ -136,7 +146,7 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 func (p *CPrinter) PrintStmt(stmt, expr string) {
 	if stmt == "go" {
 		// start a goroutine (or a thread)
-		p.PrintLevel(SEMI, fmt.Sprintf("GoCall([](){ %s; })", expr))
+		p.PrintLevel(SEMI, fmt.Sprintf("Goroutine([](){ %s; })", expr))
 	} else if len(stmt) > 0 {
 		p.PrintLevel(SEMI, stmt, expr)
 	} else {

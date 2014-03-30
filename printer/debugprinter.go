@@ -40,6 +40,14 @@ func (d *DebugPrinter) PrintLevel(term string, values ...string) {
 	d.P.PrintLevel(term, values...)
 }
 
+func (d *DebugPrinter) PrintBlockStart() {
+	d.P.PrintBlockStart()
+}
+
+func (d *DebugPrinter) PrintBlockEnd() {
+	d.P.PrintBlockEnd()
+}
+
 func (d *DebugPrinter) PrintPackage(name string) {
 	fmt.Println("/* PrintPackage", name, "*/")
 	d.P.PrintPackage(name)
