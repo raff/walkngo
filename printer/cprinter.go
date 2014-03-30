@@ -433,10 +433,10 @@ func (p *CPrinter) FormatChan(chdir, mtype string) string {
 }
 
 func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
-    if strings.HasPrefix(fun, "time::") {
-        // need to rename :(
-        fun = "go_" + fun
-    }
+	if strings.HasPrefix(fun, "time::") {
+		// need to rename :(
+		fun = "go_" + fun
+	}
 
 	if isFuncLit {
 		return fmt.Sprintf("[%s]%s", args, fun)
