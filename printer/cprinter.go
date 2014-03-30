@@ -430,28 +430,10 @@ func (p *CPrinter) FormatChan(chdir, mtype string) string {
 }
 
 func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
-	switch fun {
-	case "fmt::Sprintf":
-		fun = "sprintf"
-	case "fmt::Fprintf":
-		fun = "fprintf"
-	case "fmt::Printf":
-		fun = "printf"
-	case "fmt::Fprintln":
-		fun = "fputs"
-	case "fmt::Print", "print":
-		fun = "printf"
-		args = fmt.Sprintf(`"%%s", %s`, args)
-	case "fmt::Println", "println":
-		fun = "puts"
-	case "os::Open":
-		fun = "open"
-	default:
-		if strings.HasPrefix(fun, "time::") {
-			// need to rename :(
-			fun = "go_" + fun
-		}
-	}
+    if strings.HasPrefix(fun, "time::") {
+        // need to rename :(
+        fun = "go_" + fun
+    }
 
 	if isFuncLit {
 		return fmt.Sprintf("[%s]%s", args, fun)
