@@ -290,6 +290,8 @@ func (p *CPrinter) FormatIdent(id string) (ret string) {
 		ret = strconv.Itoa(p.iota)
 		p.iota += 1
 
+	case "string":
+		ret = "std::string"
 	default:
 		ret = id
 	}
