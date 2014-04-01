@@ -279,7 +279,8 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 	case *ast.FuncType:
 		return w.p.FormatFuncType(
 			w.parseFieldList(expr.Params, printer.PARAM),
-			w.parseFieldList(expr.Results, printer.RESULT))
+			w.parseFieldList(expr.Results, printer.RESULT),
+			expr.Func != token.NoPos)
 
 		// "thing", 0, 1.2, 'x', etc.
 	case *ast.BasicLit:

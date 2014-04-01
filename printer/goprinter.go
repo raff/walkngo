@@ -279,19 +279,24 @@ func (p *GoPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 	return fmt.Sprintf("%s(%s)", fun, args)
 }
 
-func (p *GoPrinter) FormatFuncType(params, results string) string {
+func (p *GoPrinter) FormatFuncType(params, results string, withFunc bool) string {
+	prefix := ""
+	if withFunc {
+		prefix = "func"
+	}
+
 	if len(results) == 0 {
 		// no results
-		return fmt.Sprintf("(%s)", params)
+		return fmt.Sprintf("%s(%s)", prefix, params)
 	}
 
 	if strings.ContainsAny(results, ", ") {
 		// name type or multiple types
-		return fmt.Sprintf("(%s) (%s)", params, results)
+		return fmt.Sprintf("%s(%s) (%s)", prefix, params, results)
 	}
 
 	// just type
-	return fmt.Sprintf("(%s) %s", params, results)
+	return fmt.Sprintf("%s(%s) %s", prefix, params, results)
 }
 
 func (p *GoPrinter) FormatFuncLit(ftype, body string) string {

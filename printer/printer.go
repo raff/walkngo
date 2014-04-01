@@ -133,7 +133,7 @@ type Printer interface {
 
 	FormatCall(fun, args string, isFuncLit bool) string
 
-	FormatFuncType(params, results string) string
+	FormatFuncType(params, results string, withFunc bool) string
 
 	FormatFuncLit(ftype, body string) string
 
@@ -163,7 +163,7 @@ func (p Pair) Value() string {
 }
 
 //
-// Default format for a Pair ("name" + "value")
+// Default format for a Pair ("name" SP "value")
 //
 func (p Pair) String() string {
 	if len(p.Name()) > 0 && len(p.Value()) > 0 {

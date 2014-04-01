@@ -457,13 +457,14 @@ func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 	}
 }
 
-func (p *CPrinter) FormatFuncType(params, results string) string {
+func (p *CPrinter) FormatFuncType(params, results string, withFunc bool) string {
 	if len(results) == 0 {
 		results = "void"
 	} else if IsMultiValue(results) {
 		results = fmt.Sprintf("tuple<%s>", results)
 	}
 
+	// add %%s only if withFunc ?
 	return fmt.Sprintf("%s %%s(%s)", results, params)
 }
 

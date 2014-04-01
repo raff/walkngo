@@ -223,9 +223,9 @@ func (d *DebugPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 	return d.P.FormatCall(fun, args, isFuncLit)
 }
 
-func (d *DebugPrinter) FormatFuncType(params, results string) string {
-	fmt.Println("/* FormatFuncType", params, results, "*/")
-	return d.P.FormatFuncType(params, results)
+func (d *DebugPrinter) FormatFuncType(params, results string, withFunc bool) string {
+	fmt.Println("/* FormatFuncType", params, results, withFunc, "*/")
+	return d.P.FormatFuncType(params, results, withFunc)
 }
 
 func (d *DebugPrinter) FormatFuncLit(ftype, body string) string {
