@@ -21,10 +21,10 @@ Usage:
     walkngo [--c] [--debug] [--debug-printer] [--outdir={output-folder}] file.go|folder
 
 Where:
-    --c : convert to C/C++ (or re-generate a "Go" file if --c==false or if the option is missing)
-    --debug : print out AST nodes for debugging
-    --debug-printer : print out calls to Printer methods
-    --outdir={output-folder} : creates output files in output-folder following original paths
+* --c : convert to C/C++ (or re-generate a "Go" file if --c==false or if the option is missing)
+* --debug : print out AST nodes for debugging
+* --debug-printer : print out calls to Printer methods
+* --outdir={output-folder} : creates output files in output-folder following original paths
 
 If a folder is specified as input, the program will "walk" the directory structure and convert all files with extension ".go" (it skips folders with name starting with ".")
 
@@ -55,10 +55,7 @@ Note that the current implementation is very basic, just to verify that things w
 
 TODO:
 =====
-Variable initialization: in go all variables are initizialized to their "zero value". In C/C++ they are whatever they are.
-
-Module initialization: in go each module/file can have an init() method, that is called when the module is imported.
-
-defer calls: In go the "parameter" of the defer statement is called before returning from the current method. This could be implemented with a Defer object that takes the function/block as input and executes it in its destructor... maybe.
-
-recover: panic is currently implemented as a method that causes a NPE. It should be implemented as a method throwing a Panic exception and the recover method can catch it (Would it work with defer ?).
+* Variable initialization: in go all variables are initizialized to their "zero value". In C/C++ they are whatever they are.
+* Module initialization: in go each module/file can have an init() method, that is called when the module is imported.
+* defer calls: In go the "parameter" of the defer statement is called before returning from the current method. This could be implemented with a Defer object that takes the function/block as input and executes it in its destructor... maybe.
+* recover: panic is currently implemented as a method that causes a NPE. It should be implemented as a method throwing a Panic exception and the recover method can catch it (Would it work with defer ?).
