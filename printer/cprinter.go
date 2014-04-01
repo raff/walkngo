@@ -374,6 +374,8 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 		}
 	} else if t == RESULT && len(name) > 0 {
 		ret = fmt.Sprintf("%s /* %s */", value, name)
+	} else if t == PARAM && strings.Contains(value, "%s") {
+		ret = fmt.Sprintf(value, name)
 	} else if len(name) > 0 && len(value) > 0 {
 		ret = value + " " + name
 	} else {
