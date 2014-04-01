@@ -16,17 +16,18 @@ The main program accepts a -c boolean argument to select the output (c=true for 
 Usage:
 ======
 
-    walkngo [--c] [--debug] [--outdir={output-folder}] file.go|folder
+    walkngo [--c] [--debug] [--debug-printer] [--outdir={output-folder}] file.go|folder
 
 Where:
     --c : convert to C/C++ (or re-generate a "Go" file if --c==false or if the option is missing)
     --debug : print out AST nodes for debugging
+    --debug-printer : print out calls to Printer methods
     --outdir={output-folder} : creates output files in output-folder following original paths
 
 If a folder is specified as input, the program will "walk" the directory structure and convert all files with extension ".go" (it skips folders with name starting with ".")
 
-Note:
-=====
+Notes:
+======
 
 When running with "go run" you should use:
 
@@ -37,3 +38,15 @@ The '--' tell 'go run' to stop looking for go files, otherwise it gets utterly c
 If you build it you can just run:
 
     walkngo go-source-file.go
+
+
+Runtime:
+========
+The "runtime" folder contains the implementation of some Go runtime and common modules that the language translator
+can call.
+
+For C++ there is some support for goroutines (via C++11 threads) and channels (C++11 queue, mutex, condition variables) and some initial implementations of the fmt, time and sync modules.
+
+Also, multiple initializations and multiple return values are implemented using C++11 tuples (make_tuple and tie).
+
+Note that the current implementation is very basic, just to verify that things work more or less as expected.
