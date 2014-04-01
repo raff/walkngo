@@ -490,7 +490,7 @@ func (p *CPrinter) FormatTypeAssert(orig, assert string) string {
 // Guess type and return type and new value
 //
 func GuessType(value string) (string, string) {
-	vtype := "void"
+	vtype := "auto"
 
 	if len(value) == 0 {
 		return vtype, value
