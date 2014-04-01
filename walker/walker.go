@@ -355,8 +355,12 @@ func (w *GoWalker) parseFieldList(l *ast.FieldList, ftype printer.FieldType) str
 
 	if l != nil {
 		for _, f := range l.List {
-			field := printer.Pair{w.parseNames(f.Names), w.parseExpr(f.Type)}
-			buffer.WriteString(w.p.FormatPair(field, ftype))
+			ptype := w.parseExpr(f.Type)
+
+			for _, n := range f.Names {
+				field := printer.Pair{n.Name, ptype}
+				buffer.WriteString(w.p.FormatPair(field, ftype))
+			}
 		}
 	}
 
