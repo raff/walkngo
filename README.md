@@ -50,3 +50,13 @@ For C++ there is some support for goroutines (via C++11 threads) and channels (C
 Also, multiple initializations and multiple return values are implemented using C++11 tuples (make_tuple and tie).
 
 Note that the current implementation is very basic, just to verify that things work more or less as expected.
+
+TODO:
+=====
+Variable initialization: in go all variables are initizialized to their "zero value". In C/C++ they are whatever they are.
+
+Module initialization: in go each module/file can have an init() method, that is called when the module is imported.
+
+defer calls: In go the "parameter" of the defer statement is called before returning from the current method. This could be implemented with a Defer object that takes the function/block as input and executes it in its destructor... maybe.
+
+recover: panic is currently implemented as a method that causes a NPE. It should be implemented as a method throwing a Panic exception and the recover method can catch it (Would it work with defer ?).
