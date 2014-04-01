@@ -223,9 +223,9 @@ func (p *GoPrinter) FormatBinary(lhs, op, rhs string) string {
 func (p *GoPrinter) FormatPair(v Pair, t FieldType) string {
 	switch t {
 	case METHOD:
-		return p.indent() + v.Name() + v.Value()
+		return p.indent() + v.Name() + v.Value() + NL
 	case FIELD:
-		return p.indent() + v.String()
+		return p.indent() + v.String() + NL
 	default:
 		return v.String() + COMMA
 	}
