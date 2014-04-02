@@ -453,7 +453,9 @@ func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 	}
 
 	if isFuncLit {
-		return fmt.Sprintf("[%s]%s", args, fun)
+		return fmt.Sprintf("[](%s)->%s", args, fun)
+	} else if fun == "make" && !strings.Contains(args, ",") {
+		return fmt.Sprintf("%s()", args)
 	} else {
 		return fmt.Sprintf("%s(%s)", fun, args)
 	}
