@@ -59,10 +59,7 @@ private:
     std::condition_variable recv_cond;
 
 public:
-    Chan() : size(1) {
-    }
-
-    Chan(int n) : size(n) {
+    Chan(int n=1) : size(n) {
     }
 
     void Send(T value) {
