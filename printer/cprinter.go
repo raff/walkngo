@@ -454,8 +454,8 @@ func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 
 	if isFuncLit {
 		return fmt.Sprintf("[](%s)->%s", args, fun)
-	} else if fun == "make" && !strings.Contains(args, ",") {
-		return fmt.Sprintf("new %s()", args)
+	//} else if fun == "make" {
+	//	return FormatMake(args)
 	} else {
 		return fmt.Sprintf("%s(%s)", fun, args)
 	}
@@ -533,4 +533,35 @@ func IsPublic(name string) bool {
 
 func IsMultiValue(expr string) bool {
 	return strings.Contains(expr, ",")
+}
+
+func FormatMake(args string) string {
+	if strings.HasPrefix(args, "map<") {
+		// make map
+		p := strings.LastIndex(args, ">")
+		return args[:p+1] + "()"
+	} else if strings.Contains(args, "[]") {
+		// make slice
+		// TODO: this could be make([]x, cap, max)
+
+		p := strings.LastIndex(args, "]")
+		slicedef, n := args[:p], args[p+1:]
+		if len(n) > 0 {
+			// should be ", N"
+			n = n[2:]
+		}
+
+		return fmt.Sprintf("%s%s]", slicedef, n)
+	} else {
+		// make chan
+
+		p := strings.LastIndex(args, ">")
+		chandef, n := args[:p+1], args[p+1:]
+		if len(n) > 0 {
+			// should be ", N"
+			n = n[2:]
+		}
+
+		return fmt.Sprintf("%s(%s)", chandef, n)
+	}
 }
