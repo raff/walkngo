@@ -454,8 +454,8 @@ func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 
 	if isFuncLit {
 		return fmt.Sprintf("[](%s)->%s", args, fun)
-	//} else if fun == "make" {
-	//	return FormatMake(args)
+		//} else if fun == "make" {
+		//	return FormatMake(args)
 	} else {
 		return fmt.Sprintf("%s(%s)", fun, args)
 	}
@@ -499,28 +499,37 @@ func GuessType(value string) (string, string) {
 	}
 
 	switch value[0] {
-	case '[':
-		// array or map declaration
-		i := strings.Index(value, "{")
-		if i >= 0 {
-			vtype = value[:i]
-			value = value[i:]
-		}
 	case '\'':
-		vtype = "char"
+		return "char", value
 	case '"':
-		vtype = "string"
+		return "string", value
 
-	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		vtype = "int"
+	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.':
+		if strings.Contains(value, ".") || strings.Contains(value, "E") {
+			return "float64", value
+		}
+		return "int", value
+	}
 
-	default:
-		switch value {
-		case "true", "false":
-			vtype = "bool"
+	switch value {
+	case "true", "false":
+		return "bool", value
 
-		case NIL, NULL:
-			vtype = "void*"
+	case NIL, NULL:
+		return "void*", value
+	}
+
+	if strings.HasPrefix(value, "map<") {
+		// a map
+		if p, ok := findMatch(value, '<'); ok {
+			return value[0 : p+1], value
+		}
+	}
+
+	if strings.Contains(value, "[") {
+		// could be an array
+		if p, ok := findMatch(value, '['); ok {
+			return value[0 : p+1], value
 		}
 	}
 
@@ -564,4 +573,40 @@ func FormatMake(args string) string {
 
 		return fmt.Sprintf("%s(%s)", chandef, n)
 	}
+}
+
+func findMatch(s string, ch byte) (int, bool) {
+	var c1, c2 byte
+	var cnt int
+
+	open := strings.IndexByte(s, ch)
+	if open < 0 {
+		return 0, false
+	}
+
+	c1 = ch
+
+	switch c1 {
+	case '<':
+		c2 = '>'
+	case '[':
+		c2 = ']'
+	case '{':
+		c2 = '}'
+	case '(':
+		c2 = ')'
+	}
+
+	for p := open; p < len(s); p++ {
+		if s[p] == c1 {
+			cnt++
+		} else if s[p] == c2 {
+			cnt--
+			if cnt == 0 {
+				return p, true
+			}
+		}
+	}
+
+	return 0, false
 }

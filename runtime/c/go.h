@@ -50,6 +50,19 @@ inline void Goroutine(std::function<void()> const& fun) {
     t.detach();
 }
 
+class Defer {
+private:
+    std::function<void()> const& deferred;
+
+public:
+    Defer(std::function<void()> const& fun) : deferred(fun) {
+    }
+
+    ~Defer() {
+        deferred();
+    }
+};
+
 template<class T> class Chan {
 private:
     std::queue<T> buffer;
