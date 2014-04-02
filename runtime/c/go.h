@@ -50,16 +50,16 @@ inline void Goroutine(std::function<void()> const& fun) {
     t.detach();
 }
 
-class Defer {
+class Deferred {
 private:
-    std::function<void()> const& deferred;
+    std::function<void()> const& deferred_call;
 
 public:
-    Defer(std::function<void()> const& fun) : deferred(fun) {
+    Deferred(std::function<void()> const& fun) : deferred_call(fun) {
     }
 
-    ~Defer() {
-        deferred();
+    ~Deferred() {
+        deferred_call();
     }
 };
 

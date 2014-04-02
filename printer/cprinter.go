@@ -23,7 +23,8 @@ type CPrinter struct {
 	sameline bool
 	w        io.Writer
 
-	iota int // incremented when 'const n = iota' or 'const n' - XXX: need to add a way to reset it
+	iota     int // incremented when 'const n = iota' or 'const n' - XXX: need to add a way to reset it
+	deferred int // used to generate unique names for "defer" callbacks
 }
 
 func (p *CPrinter) SetWriter(w io.Writer) {
@@ -147,6 +148,9 @@ func (p *CPrinter) PrintStmt(stmt, expr string) {
 	if stmt == "go" {
 		// start a goroutine (or a thread)
 		p.PrintLevel(SEMI, fmt.Sprintf("Goroutine([](){ %s; })", expr))
+	} else if stmt == "defer" {
+		p.PrintLevel(SEMI, fmt.Sprintf("Deferred defer%d([](){ %s; })", p.deferred, expr))
+		p.deferred++
 	} else if len(stmt) > 0 {
 		p.PrintLevel(SEMI, stmt, expr)
 	} else {
