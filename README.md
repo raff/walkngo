@@ -60,3 +60,6 @@ Module initialization: in go each module/file can have an init() method, that is
 defer calls: In go the "parameter" of the defer statement is called before returning from the current method. This could be implemented with a Defer object that takes the function/block as input and executes it in its destructor... maybe.
 
 recover: panic is currently implemented as a method that causes a NPE. It should be implemented as a method throwing a Panic exception and the recover method can catch it (Would it work with defer ?).
+* named return values: right now the name in the method declaration is commented out so that it doesn't generate an error.It should be possible to add these as variable inside the body, so that they can be properly referenced, and then make sure that a return with no parameters is changed to a return with those variables.
+* range statement: a range statement with '_, x' should be converted into a for statement and array dereferencing.  Not sure there is a way to correctly distinguish between a range on an array vs. a range on a map (or a range on a channel).
+* select on channels: not sure of what to do here.
