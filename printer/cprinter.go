@@ -215,6 +215,7 @@ func (p *CPrinter) PrintFor(init, cond, post string) {
 }
 
 func (p *CPrinter) PrintRange(key, value, expr string) {
+	// for maps a std::pair is returned where key is p.first and value is p.second
 	if key == "_" {
 		key, value = value, ""
 	}
