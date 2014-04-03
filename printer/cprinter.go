@@ -125,7 +125,7 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 		// array or map ?
 		i := strings.Index(typedef, "[")
 		names += typedef[i:]
-		typedef = typedef[0:i]
+		typedef = typedef[:i]
 	}
 
 	if ntuple && len(values) > 0 {
@@ -215,14 +215,17 @@ func (p *CPrinter) PrintFor(init, cond, post string) {
 }
 
 func (p *CPrinter) PrintRange(key, value, expr string) {
-	p.PrintLevel(NONE, "for", key)
+	if key == "_" {
+		key, value = value, ""
+	}
+
+	p.PrintLevel(NONE, "for (auto", key)
 
 	if len(value) > 0 {
 		p.Print(",", value)
 	}
 
-	p.Print(" := range", expr)
-
+	p.Print(":", expr, ") ")
 }
 
 func (p *CPrinter) PrintSwitch(init, expr string) {
@@ -367,7 +370,7 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 
 	if strings.HasPrefix(value, "*") {
 		i := strings.LastIndex(value, "*") + 1
-		value = value[i:] + value[0:i]
+		value = value[i:] + value[:i]
 	}
 
 	if t == METHOD {
@@ -526,14 +529,14 @@ func GuessType(value string) (string, string) {
 	if strings.HasPrefix(value, "map<") {
 		// a map
 		if p, ok := findMatch(value, '<'); ok {
-			return value[0 : p+1], value
+			return value[:p+1], value
 		}
 	}
 
 	if strings.Contains(value, "[") {
 		// could be an array
 		if p, ok := findMatch(value, '['); ok {
-			return value[0 : p+1], value
+			return value[:p+1], value
 		}
 	}
 
