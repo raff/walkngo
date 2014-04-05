@@ -5,6 +5,10 @@
 #include <condition_variable>
 
 namespace sync {
+
+    //
+    // Mutex
+    //
     class Mutex : private std::mutex {
         friend class Cond;
     public:
@@ -17,6 +21,9 @@ namespace sync {
         }
     };
 
+    //
+    // Condition
+    //
     class Cond {
     private:
         std::condition_variable_any cv;
@@ -37,6 +44,31 @@ namespace sync {
         }
     };
 
+    //
+    // RWMutex is temporary implemented as a regular mutex
+    //
+    class RWMutex : private std::mutex {
+    public:
+        void Lock() {
+            std::mutex::lock();
+        }
+
+        void Unlock() {
+            std::mutex::unlock();
+        }
+
+        void RLock() {
+            std::mutex::lock();
+        }
+
+        void RUnlock() {
+            std::mutex::unlock();
+        }
+    };
+
+    //
+    // WaitGroup
+    //
     class WaitGroup {
     private:
         std::mutex m;
@@ -60,6 +92,18 @@ namespace sync {
         void Wait() {
             std::unique_lock<std::mutex> lk(m);
             while (waiters > 0) cv.wait(lk);
+        }
+    };
+
+    //
+    // Once
+    //
+    class Once {
+    private:
+        std::once_flag flag;
+    public:
+        void Do(std::function<void()> const& fun) {
+            std::call_once(flag, fun);
         }
     };
 }
