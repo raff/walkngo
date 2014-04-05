@@ -122,7 +122,6 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 	if len(typedef) == 0 {
 		typedef, values = GuessType(values)
 	} else if strings.Contains(typedef, "[") {
-		// array or map ?
 		i := strings.Index(typedef, "[")
 		names += typedef[i:]
 		typedef = typedef[:i]
@@ -456,7 +455,7 @@ func (p *CPrinter) FormatChan(chdir, mtype string) string {
 
 func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 	if strings.HasPrefix(fun, "time::") {
-		// need to rename :(
+		// need to rename, to avoid conflicts with C/C++ "time" :(
 		fun = "go_" + fun
 	}
 
@@ -502,10 +501,16 @@ func (p *CPrinter) FormatTypeAssert(orig, assert string) string {
 func GuessType(value string) (string, string) {
 	vtype := "auto"
 
+    //
+    // no value ?
+    //
 	if len(value) == 0 {
 		return vtype, value
 	}
 
+    //
+    // check if basic type
+    //
 	switch value[0] {
 	case '\'':
 		return "char", value
@@ -519,14 +524,29 @@ func GuessType(value string) (string, string) {
 		return "int", value
 	}
 
+    //
+    // boolean values
+    //
 	switch value {
 	case "true", "false":
 		return "bool", value
 
+    //
+    // null values
+    //
 	case NIL, NULL:
 		return "void*", value
 	}
 
+    //
+    // x = make(t) -> t x()
+    //
+    if strings.HasPrefix(value, "make(") {
+    }
+
+    //
+    // a map
+    //
 	if strings.HasPrefix(value, "map<") {
 		// a map
 		if p, ok := findMatch(value, '<'); ok {
@@ -534,6 +554,9 @@ func GuessType(value string) (string, string) {
 		}
 	}
 
+    //
+    // an array
+    //
 	if strings.Contains(value, "[") {
 		// could be an array
 		if p, ok := findMatch(value, '['); ok {
@@ -541,6 +564,9 @@ func GuessType(value string) (string, string) {
 		}
 	}
 
+    //
+    // don't know - let's use auto
+    //
 	return vtype, value
 }
 
@@ -583,8 +609,12 @@ func FormatMake(args string) string {
 	}
 }
 
+//
+// findMatch finds the matching closing character given the opening character.
+// used to find matching braces or parenthesis with support for nesting.
+// NOTE: this version does NOT not check if the closing character is inside quotes.
 func findMatch(s string, ch byte) (int, bool) {
-	var c1, c2 byte
+	var closing byte
 	var cnt int
 
 	open := strings.IndexByte(s, ch)
@@ -592,23 +622,21 @@ func findMatch(s string, ch byte) (int, bool) {
 		return 0, false
 	}
 
-	c1 = ch
-
-	switch c1 {
+	switch ch {
 	case '<':
-		c2 = '>'
+		closing = '>'
 	case '[':
-		c2 = ']'
+		closing = ']'
 	case '{':
-		c2 = '}'
+		closing = '}'
 	case '(':
-		c2 = ')'
+		closing = ')'
 	}
 
 	for p := open; p < len(s); p++ {
-		if s[p] == c1 {
+		if s[p] == ch {
 			cnt++
-		} else if s[p] == c2 {
+		} else if s[p] == closing {
 			cnt--
 			if cnt == 0 {
 				return p, true
