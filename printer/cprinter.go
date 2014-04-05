@@ -23,8 +23,45 @@ type CPrinter struct {
 	sameline bool
 	w        io.Writer
 
-	iota     int // incremented when 'const n = iota' or 'const n' - XXX: need to add a way to reset it
+	iota int // incremented when 'const n = iota' or 'const n' - XXX: need to add a way to reset it
+	ctx  *CContext
+}
+
+//
+// CContext is the context for a (function) block
+//
+type CContext struct {
 	deferred int // used to generate unique names for "defer" callbacks
+
+	receiver        string // the name of the receiver, to be converted to "this"
+	ret_definitions string // used to define return variables
+	ret_values      string // used to "fill" empty returns
+
+	next *CContext
+}
+
+func (ctx *CContext) Selector(s string) string {
+	if ctx != nil && ctx.receiver == s {
+		return "this->"
+	}
+
+	return fmt.Sprintf("%s.", s)
+}
+
+func (p *CPrinter) Reset() {
+	p.level = 0
+	p.sameline = false
+
+	p.iota = 0
+	p.ctx = nil
+}
+
+func (p *CPrinter) PushContext() {
+	p.ctx = &CContext{next: p.ctx}
+}
+
+func (p *CPrinter) PopContext() {
+	p.ctx = p.ctx.next
 }
 
 func (p *CPrinter) SetWriter(w io.Writer) {
@@ -73,6 +110,11 @@ func (p *CPrinter) PrintLevelIn(term string, values ...string) {
 func (p *CPrinter) PrintBlockStart() {
 	p.PrintLevel("{\n")
 	p.UpdateLevel(UP)
+
+	if len(p.ctx.ret_definitions) > 0 {
+		p.PrintLevel(NL, p.ctx.ret_definitions)
+		p.ctx.ret_definitions = "" // this gets printed only once
+	}
 }
 
 func (p *CPrinter) PrintBlockEnd() {
@@ -149,8 +191,8 @@ func (p *CPrinter) PrintStmt(stmt, expr string) {
 		// start a goroutine (or a thread)
 		p.PrintLevel(SEMI, fmt.Sprintf("Goroutine([](){ %s; })", expr))
 	} else if stmt == "defer" {
-		p.PrintLevel(SEMI, fmt.Sprintf("Deferred defer%d([](){ %s; })", p.deferred, expr))
-		p.deferred++
+		p.PrintLevel(SEMI, fmt.Sprintf("Deferred defer%d([](){ %s; })", p.ctx.deferred, expr))
+		p.ctx.deferred++
 	} else if len(stmt) > 0 {
 		p.PrintLevel(SEMI, stmt, expr)
 	} else {
@@ -159,6 +201,10 @@ func (p *CPrinter) PrintStmt(stmt, expr string) {
 }
 
 func (p *CPrinter) PrintReturn(expr string, tuple bool) {
+	if len(expr) == 0 && len(p.ctx.ret_values) > 0 {
+		expr = p.Chop(p.ctx.ret_values)
+	}
+
 	if tuple {
 		expr = fmt.Sprintf("make_tuple(%s)", expr)
 	}
@@ -181,6 +227,8 @@ func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
 		if len(receiver) > 0 {
 			parts := strings.SplitN(receiver, " ", 2)
 			receiver = "/* " + parts[1] + " */ " + strings.TrimRight(parts[0], "*") + "::"
+
+			p.ctx.receiver = parts[1]
 		}
 	}
 
@@ -382,6 +430,10 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 		}
 	} else if t == RESULT && len(name) > 0 {
 		ret = fmt.Sprintf("%s /* %s */", value, name)
+		if p.ctx != nil {
+			p.ctx.ret_definitions += fmt.Sprintf("%s %s;", value, name)
+			p.ctx.ret_values += fmt.Sprintf("%s, ", name)
+		}
 	} else if t == PARAM && strings.Contains(value, "%s") {
 		ret = fmt.Sprintf(value, name)
 	} else if len(name) > 0 && len(value) > 0 {
@@ -486,7 +538,7 @@ func (p *CPrinter) FormatFuncLit(ftype, body string) string {
 
 func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {
 	if isObject {
-		return fmt.Sprintf("%s.%s", pname, sel)
+		return fmt.Sprintf("%s%s", p.ctx.Selector(pname), sel)
 	} else {
 		return fmt.Sprintf("%s::%s", pname, sel)
 	}
@@ -534,8 +586,9 @@ func GuessType(value string) (string, string) {
 		}
 	}
 
-	if strings.Contains(value, "[") {
-		// could be an array
+	i := strings.IndexAny(value, "[({") // use this instead of s.Contains("[") to catch f(x[])
+	if i >= 0 && value[i] == '[' {
+		// should be an array
 		if p, ok := findMatch(value, '['); ok {
 			return value[:p+1], value
 		}

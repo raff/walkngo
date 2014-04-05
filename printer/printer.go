@@ -30,6 +30,8 @@ const (
 // Printer is the interface to be implemented to print a program
 //
 type Printer interface {
+	Reset()
+
 	SetWriter(w io.Writer)
 	UpdateLevel(delta int)
 	SameLine()
@@ -37,6 +39,9 @@ type Printer interface {
 	Print(values ...string)
 	PrintLevel(term string, values ...string)
 	Chop(line string) string
+
+	PushContext()
+	PopContext()
 
 	// print start block "{"
 	PrintBlockStart()
