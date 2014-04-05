@@ -12,6 +12,18 @@ type DebugPrinter struct {
 	P Printer
 }
 
+func (d *DebugPrinter) Reset() {
+	d.P.Reset()
+}
+
+func (d *DebugPrinter) PushContext() {
+	d.P.PushContext()
+}
+
+func (d *DebugPrinter) PopContext() {
+	d.P.PopContext()
+}
+
 func (d *DebugPrinter) SetWriter(w io.Writer) {
 	d.P.SetWriter(w)
 }

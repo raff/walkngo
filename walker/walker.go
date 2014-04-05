@@ -45,6 +45,7 @@ func (w *GoWalker) WalkFile(filename string) error {
 		return err
 	}
 
+	w.p.Reset()
 	w.p.Print(fmt.Sprintf("//source: %s\n", filename))
 
 	ast.Walk(w, f)
@@ -90,6 +91,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		}
 
 	case *ast.FuncDecl:
+		w.p.PushContext()
 		w.p.Print("\n")
 		w.p.PrintFunc(w.parseFieldList(n.Recv, printer.RECEIVER),
 			n.Name.String(),
@@ -97,6 +99,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 			w.parseFieldList(n.Type.Results, printer.RESULT))
 		w.Visit(n.Body)
 		w.p.Print("\n")
+		w.p.PopContext()
 
 	case *ast.BlockStmt:
 		w.p.PrintBlockStart()

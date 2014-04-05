@@ -17,6 +17,17 @@ type GoPrinter struct {
 	w        io.Writer
 }
 
+func (p *GoPrinter) Reset() {
+	p.level = 0
+	p.sameline = false
+}
+
+func (p *GoPrinter) PushContext() {
+}
+
+func (p *GoPrinter) PopContext() {
+}
+
 func (p *GoPrinter) SetWriter(w io.Writer) {
 	p.w = w
 }
