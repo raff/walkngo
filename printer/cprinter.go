@@ -23,14 +23,15 @@ type CPrinter struct {
 	sameline bool
 	w        io.Writer
 
-	iota int // incremented when 'const n = iota' or 'const n' - XXX: need to add a way to reset it
-	ctx  *CContext
+	ctx *CContext
 }
 
 //
 // CContext is the context for a (function) block
 //
 type CContext struct {
+	iota int // incremented when 'const n = iota' or 'const n'
+
 	deferred int // used to generate unique names for "defer" callbacks
 
 	receiver        string // the name of the receiver, to be converted to "this"
@@ -52,7 +53,6 @@ func (p *CPrinter) Reset() {
 	p.level = 0
 	p.sameline = false
 
-	p.iota = 0
 	p.ctx = nil
 }
 
@@ -107,19 +107,37 @@ func (p *CPrinter) PrintLevelIn(term string, values ...string) {
 	p.level += 1
 }
 
-func (p *CPrinter) PrintBlockStart() {
-	p.PrintLevel("{\n")
+func (p *CPrinter) PrintBlockStart(b BlockType) {
+	var open string
+
+	switch b {
+	case CONST, VAR:
+		open = "("
+	default:
+		open = "{"
+	}
+
+	p.PrintLevel(NL, open)
 	p.UpdateLevel(UP)
 
-	if len(p.ctx.ret_definitions) > 0 {
+	if b == CODE && len(p.ctx.ret_definitions) > 0 {
 		p.PrintLevel(NL, p.ctx.ret_definitions)
 		p.ctx.ret_definitions = "" // this gets printed only once
 	}
 }
 
-func (p *CPrinter) PrintBlockEnd() {
+func (p *CPrinter) PrintBlockEnd(b BlockType) {
+	var close string
+
+	switch b {
+	case CONST, VAR:
+		close = ")"
+	default:
+		close = "}"
+	}
+
 	p.UpdateLevel(DOWN)
-	p.PrintLevel("}")
+	p.PrintLevel(NONE, close)
 }
 
 func (p *CPrinter) PrintPackage(name string) {
@@ -342,8 +360,8 @@ func (p *CPrinter) FormatIdent(id string) (ret string) {
 		return NULL
 
 	case IOTA:
-		ret = strconv.Itoa(p.iota)
-		p.iota += 1
+		ret = strconv.Itoa(p.ctx.iota)
+		p.ctx.iota += 1
 
 	case "string":
 		ret = "std::string"
@@ -553,16 +571,16 @@ func (p *CPrinter) FormatTypeAssert(orig, assert string) string {
 func GuessType(value string) (string, string) {
 	vtype := "auto"
 
-    //
-    // no value ?
-    //
+	//
+	// no value ?
+	//
 	if len(value) == 0 {
 		return vtype, value
 	}
 
-    //
-    // check if basic type
-    //
+	//
+	// check if basic type
+	//
 	switch value[0] {
 	case '\'':
 		return "char", value
@@ -576,29 +594,29 @@ func GuessType(value string) (string, string) {
 		return "int", value
 	}
 
-    //
-    // boolean values
-    //
+	//
+	// boolean values
+	//
 	switch value {
 	case "true", "false":
 		return "bool", value
 
-    //
-    // null values
-    //
+		//
+		// null values
+		//
 	case NIL, NULL:
 		return "void*", value
 	}
 
-    //
-    // x = make(t) -> t x()
-    //
-    if strings.HasPrefix(value, "make(") {
-    }
+	//
+	// x = make(t) -> t x()
+	//
+	if strings.HasPrefix(value, "make(") {
+	}
 
-    //
-    // a map
-    //
+	//
+	// a map
+	//
 	if strings.HasPrefix(value, "map<") {
 		// a map
 		if p, ok := findMatch(value, '<'); ok {
@@ -606,9 +624,9 @@ func GuessType(value string) (string, string) {
 		}
 	}
 
-    //
-    // an array
-    //
+	//
+	// an array
+	//
 	i := strings.IndexAny(value, "[({") // use this instead of s.Contains("[") to catch f(x[])
 	if i >= 0 && value[i] == '[' {
 		// should be an array
@@ -617,9 +635,9 @@ func GuessType(value string) (string, string) {
 		}
 	}
 
-    //
-    // don't know - let's use auto
-    //
+	//
+	// don't know - let's use auto
+	//
 	return vtype, value
 }
 

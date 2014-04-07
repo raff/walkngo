@@ -86,9 +86,11 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 	case *ast.GenDecl:
 		w.p.Print("\n")
+		w.p.PushContext()
 		for _, s := range n.Specs {
 			w.Visit(s)
 		}
+		w.p.PopContext()
 
 	case *ast.FuncDecl:
 		w.p.PushContext()
@@ -102,11 +104,11 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.PopContext()
 
 	case *ast.BlockStmt:
-		w.p.PrintBlockStart()
+		w.p.PrintBlockStart(printer.CODE)
 		for _, i := range n.List {
 			w.Visit(i)
 		}
-		w.p.PrintBlockEnd()
+		w.p.PrintBlockEnd(printer.CODE)
 
 	case *ast.IfStmt:
 		if !w.p.IsSameLine() {

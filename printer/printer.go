@@ -4,7 +4,11 @@ import (
 	"io"
 )
 
+// FieldType describes the type of field in a list (struct field, param field, result field, etc.)
 type FieldType int
+
+// BlockType describes the type of block (code block, const definition block, etc.)
+type BlockType int
 
 const (
 	UP   = +1
@@ -15,6 +19,13 @@ const (
 	RECEIVER
 	PARAM
 	RESULT
+
+	CODE BlockType = iota
+	CONST
+	VAR
+	TYPE
+	STRUCT
+	INTERFACE
 
 	CHAN_BIDI = "chan"
 	CHAN_SEND = "chan<-"
@@ -44,10 +55,10 @@ type Printer interface {
 	PopContext()
 
 	// print start block "{"
-	PrintBlockStart()
+	PrintBlockStart(b BlockType)
 
 	// print end block "}"
-	PrintBlockEnd()
+	PrintBlockEnd(b BlockType)
 
 	// print the package name
 	PrintPackage(name string)

@@ -65,14 +65,32 @@ func (p *GoPrinter) PrintLevel(term string, values ...string) {
 	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "), term)
 }
 
-func (p *GoPrinter) PrintBlockStart() {
-	p.PrintLevel("{\n")
+func (p *GoPrinter) PrintBlockStart(b BlockType) {
+	var open string
+
+	switch b {
+	case CONST, VAR:
+		open = "("
+	default:
+		open = "{"
+	}
+
+	p.PrintLevel(NL, open)
 	p.UpdateLevel(UP)
 }
 
-func (p *GoPrinter) PrintBlockEnd() {
+func (p *GoPrinter) PrintBlockEnd(b BlockType) {
+	var close string
+
+	switch b {
+	case CONST, VAR:
+		close = ")"
+	default:
+		close = "}"
+	}
+
 	p.UpdateLevel(DOWN)
-	p.PrintLevel("}")
+	p.PrintLevel(NONE, close)
 }
 
 func (p *GoPrinter) PrintPackage(name string) {

@@ -52,12 +52,12 @@ func (d *DebugPrinter) PrintLevel(term string, values ...string) {
 	d.P.PrintLevel(term, values...)
 }
 
-func (d *DebugPrinter) PrintBlockStart() {
-	d.P.PrintBlockStart()
+func (d *DebugPrinter) PrintBlockStart(b BlockType) {
+	d.P.PrintBlockStart(b)
 }
 
-func (d *DebugPrinter) PrintBlockEnd() {
-	d.P.PrintBlockEnd()
+func (d *DebugPrinter) PrintBlockEnd(b BlockType) {
+	d.P.PrintBlockEnd(b)
 }
 
 func (d *DebugPrinter) PrintPackage(name string) {
