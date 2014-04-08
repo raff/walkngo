@@ -411,6 +411,11 @@ func (p *CPrinter) FormatUnary(op, operand string) string {
 }
 
 func (p *CPrinter) FormatBinary(lhs, op, rhs string) string {
+	if op == "&^" {
+		// AND NOT
+		op = "&"
+		rhs = "~" + rhs
+	}
 	return fmt.Sprintf("%s %s %s", lhs, op, rhs)
 }
 
