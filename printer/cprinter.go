@@ -9,7 +9,7 @@ import (
 
 const (
 	NIL  = "nil"
-	NULL = "NULL"
+	NULL = "nullptr"
 	IOTA = "iota"
 )
 
@@ -417,14 +417,14 @@ func (p *CPrinter) FormatBinary(lhs, op, rhs string) string {
 func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 	name, value := v.Name(), v.Value()
 
-	if strings.HasPrefix(value, "[") {
-		i := strings.LastIndex(value, "]")
+	if strings.HasSuffix(value, "]") {
+		i := strings.LastIndex(value, "[")
 		if i < 0 {
 			// it should be an error
 
 		} else {
-			arr := value[:i+1]
-			value = value[i+1:]
+			arr := value[i:]
+			value = value[:i]
 
 			if len(name) > 0 {
 				name += arr
@@ -453,6 +453,8 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 		}
 	} else if t == PARAM && strings.Contains(value, "%s") {
 		ret = fmt.Sprintf(value, name)
+	} else if t == FIELD && len(name) == 0 {
+		ret = getIdentifier(value) + " " + value
 	} else if len(name) > 0 && len(value) > 0 {
 		ret = value + " " + name
 	} else {
@@ -716,4 +718,14 @@ func findMatch(s string, ch byte) (int, bool) {
 	}
 
 	return 0, false
+}
+
+func getIdentifier(s string) string {
+	for i, c := range s {
+		if c == '<' || c == '[' {
+			return s[0:i]
+		}
+	}
+
+	return s
 }
