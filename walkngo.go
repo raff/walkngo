@@ -66,28 +66,38 @@ func (w Walker) Walk(path string, info os.FileInfo, err error) error {
 }
 
 func main() {
-	clang := flag.Bool("c", false, "print as C program or Go program")
 	debug := flag.Bool("debug", false, "print AST nodes")
 	pdebug := flag.Bool("debug-printer", false, "print Printer calls")
 	outd := flag.String("outdir", "", "create converted files in outdir")
+	lang := flag.String("lang", "go", "convert to specified language (go, c, rust)")
 
 	flag.Parse()
 
 	var p printer.Printer
-	lang := "go"
 
-	if *clang {
+	switch *lang {
+	case "c":
 		p = &printer.CPrinter{}
-		lang = "cc"
-	} else {
+		*lang = "cc"
+
+	case "go":
 		p = &printer.GoPrinter{}
+		*lang = "go"
+
+	case "rust":
+		p = &printer.RustPrinter{}
+		*lang = "rust"
+
+	default:
+		fmt.Println("unsupported language", *lang, "use c, go or rust")
+		return
 	}
 
 	if *pdebug {
 		p = &printer.DebugPrinter{p}
 	}
 
-	walker := Walker{walkngo.NewWalker(p, os.Stdout, *debug), *outd, "", lang}
+	walker := Walker{walkngo.NewWalker(p, os.Stdout, *debug), *outd, "", *lang}
 
 	for _, f := range flag.Args() {
 		walker.prefix = f

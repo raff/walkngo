@@ -11,17 +11,17 @@ The walker package contains the AST walker/visitor, the printer package contains
 * The "CPrinter" module tries to convert the Go source file to C (actually C++).
 * There is also a "DebugPrinter" module that wraps a real "printer" module but prints out method calls and parameters (enabled via --debug-printer).
 
-The main program accepts a -c boolean argument to select the output (c=true for C++, false for Go)
+The main program accepts a --lang argument to select the output language (c for C++, go and rust)
 
-    walkngo -c walkngo.go
+    walkngo --lang=c walkngo.go
 
 Usage:
 ======
 
-    walkngo [--c] [--debug] [--debug-printer] [--outdir={output-folder}] file.go|folder
+    walkngo [--lang=c|go|rust] [--debug] [--debug-printer] [--outdir={output-folder}] file.go|folder
 
 Where:
-* --c : convert to C/C++ (or re-generate a "Go" file if --c==false or if the option is missing)
+* --lang={lang} : convert the Go source files to the specified language
 * --debug : print out AST nodes for debugging
 * --debug-printer : print out calls to Printer methods
 * --outdir={output-folder} : creates output files in output-folder following original paths
@@ -55,6 +55,7 @@ Note that the current implementation is very basic, just to verify that things w
 
 TODO:
 =====
+* Slices
 * Variable initialization: in go all variables are initizialized to their "zero value". In C/C++ they are whatever they are.
 * Module initialization: in go each module/file can have an init() method, that is called when the module is imported.
 * recover: panic is currently implemented as a method that causes a NPE. It should be implemented as a method throwing a Panic exception and the recover method can catch it (Would it work with defer ?).
