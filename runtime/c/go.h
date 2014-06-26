@@ -99,4 +99,34 @@ public:
         return ret;
     }
 };
+
+template<class T> class Slice {
+private:
+    T *_p;
+    int _len;
+    int _cap;
+
+public:
+    Slice(T a[], int len) : _p(a), _len(len), _cap(len) {
+    }
+
+    Slice(T a[], int len, int cap) : _p(a), _len(len), _cap(cap) {
+    }
+
+    int len() {
+        return _len;
+    }
+
+    int cap() {
+        return _cap;
+    }
+
+    Slice operator()(int first) {
+        return Slice(_p+first, _len - first);
+    }
+
+    Slice operator()(int first, int last) {
+        return Slice(_p + first, last-first);
+    }
+};
 #endif
