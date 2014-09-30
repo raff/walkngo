@@ -35,6 +35,7 @@ const (
 	NL    = "\n"
 	SEMI  = ";\n"
 	COMMA = ", "
+	COMMANL = ",\n"
 )
 
 //

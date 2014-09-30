@@ -45,7 +45,7 @@ func (p *RustPrinter) IsSameLine() bool {
 }
 
 func (p *RustPrinter) Chop(line string) string {
-	return strings.TrimRight(line, COMMA)
+	return strings.TrimRight(line, COMMANL)
 }
 
 func (p *RustPrinter) indent() string {
@@ -63,6 +63,10 @@ func (p *RustPrinter) Print(values ...string) {
 
 func (p *RustPrinter) PrintLevel(term string, values ...string) {
 	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "), term)
+}
+
+func (p *RustPrinter) PrintfLevel(term string, format string, values ...interface{}) {
+	fmt.Fprintf(p.w, p.indent() + format + term, values...)
 }
 
 func (p *RustPrinter) PrintBlockStart(b BlockType) {
@@ -102,7 +106,11 @@ func (p *RustPrinter) PrintImport(name, path string) {
 }
 
 func (p *RustPrinter) PrintType(name, typedef string) {
-	p.PrintLevel(NL, "type", name, typedef)
+	if strings.Contains(typedef, "%") {
+		p.PrintfLevel(NL, typedef, name)
+	} else {
+		p.PrintLevel(NL, "type", name, typedef)
+	}
 }
 
 func (p *RustPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtuple bool) {
@@ -127,9 +135,9 @@ func (p *RustPrinter) PrintValue(vtype, typedef, names, values string, ntuple, v
 
 func (p *RustPrinter) PrintStmt(stmt, expr string) {
 	if len(stmt) > 0 {
-		p.PrintLevel(NL, stmt, expr)
+		p.PrintLevel(SEMI, stmt, expr)
 	} else {
-		p.PrintLevel(NL, expr)
+		p.PrintLevel(SEMI, expr)
 	}
 }
 
@@ -270,7 +278,7 @@ func (p *RustPrinter) FormatPair(v Pair, t FieldType) string {
 	case METHOD:
 		return p.indent() + v.Name() + v.Value() + NL
 	case FIELD:
-		return p.indent() + v.String() + NL
+		return fmt.Sprintf("%s%s: %s%s", p.indent(), v.Name(), v.Value(), COMMANL)
 	case PARAM:
 		return fmt.Sprintf("%s: %s%s", v.Name(), v.Value(), COMMA)
 	default:
@@ -304,9 +312,9 @@ func (p *RustPrinter) FormatKeyValue(key, value string) string {
 
 func (p *RustPrinter) FormatStruct(fields string) string {
 	if len(fields) > 0 {
-		return fmt.Sprintf("struct{\n%s}", fields)
+		return fmt.Sprintf("struct %%s {\n%s\n}", p.Chop(fields))
 	} else {
-		return "struct{}"
+		return "struct %%s;"
 	}
 }
 
