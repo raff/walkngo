@@ -330,7 +330,7 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 		// funcname(args)
 	case *ast.CallExpr:
 		_, funclit := expr.Fun.(*ast.FuncLit)
-		return w.p.FormatCall(w.parseExpr(expr.Fun), w.parseExprList(expr.Args)+ifTrue("...", expr.Ellipsis > 0), funclit)
+		return w.p.FormatCall(w.parseExpr(expr.Fun), w.parseExprList(expr.Args)+printer.IfTrue("...", expr.Ellipsis > 0), funclit)
 
 		// name.(type)
 	case *ast.TypeAssertExpr:
@@ -393,14 +393,4 @@ func (w *GoWalker) exprOr(expr ast.Expr, v string) string {
 	} else {
 		return v
 	}
-}
-
-//
-// ifTrue retruns the input value if the condition is true, an empty string otherwise
-//
-func ifTrue(val string, cond bool) (ret string) {
-	if cond {
-		ret = val
-	}
-	return
 }

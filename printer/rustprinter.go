@@ -66,7 +66,7 @@ func (p *RustPrinter) PrintLevel(term string, values ...string) {
 }
 
 func (p *RustPrinter) PrintfLevel(term string, format string, values ...interface{}) {
-	fmt.Fprintf(p.w, p.indent() + format + term, values...)
+	fmt.Fprintf(p.w, p.indent()+format+term, values...)
 }
 
 func (p *RustPrinter) PrintBlockStart(b BlockType) {
@@ -146,7 +146,7 @@ func (p *RustPrinter) PrintReturn(expr string, tuple bool) {
 }
 
 func (p *RustPrinter) PrintFunc(receiver, name, params, results string) {
-	p.PrintLevel(NONE, "fn ")
+	p.PrintfLevel(NONE, "%sfn ", IfTrue("pub ", IsPublic(name)))
 	if len(receiver) > 0 {
 		fmt.Fprintf(p.w, "(%s) ", receiver)
 	}

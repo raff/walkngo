@@ -2,7 +2,7 @@ package printer
 
 import (
 	"io"
-        "unicode"
+	"unicode"
 )
 
 // FieldType describes the type of field in a list (struct field, param field, result field, etc.)
@@ -32,10 +32,10 @@ const (
 	CHAN_SEND = "chan<-"
 	CHAN_RECV = "<-chan"
 
-	NONE  = ""
-	NL    = "\n"
-	SEMI  = ";\n"
-	COMMA = ", "
+	NONE    = ""
+	NL      = "\n"
+	SEMI    = ";\n"
+	COMMA   = ", "
 	COMMANL = ",\n"
 )
 
@@ -195,13 +195,23 @@ func (p Pair) String() string {
 // Is this name public
 //
 func IsPublic(name string) bool {
-    //
-    // get the first "rune" and check if is UpperCase
-    //
-    for _, rune := range(name) {
-        return unicode.IsUpper(rune)
-    }
+	//
+	// get the first "rune" and check if is UpperCase
+	//
+	for _, rune := range name {
+		return unicode.IsUpper(rune)
+	}
 
-    // shouldn't get here, unless the string is empty
-    return false
+	// shouldn't get here, unless the string is empty
+	return false
+}
+
+//
+// IfTrue returns the input value if the condition is true, an empty string otherwise
+//
+func IfTrue(val string, cond bool) (ret string) {
+	if cond {
+		return val
+	}
+	return
 }
