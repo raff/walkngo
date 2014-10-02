@@ -648,10 +648,6 @@ func GuessType(value string) (string, string) {
 	return vtype, value
 }
 
-func IsPublic(name string) bool {
-	return name[0] >= 'A' && name[0] <= 'Z'
-}
-
 func IsMultiValue(expr string) bool {
 	return strings.Contains(expr, ",")
 }
