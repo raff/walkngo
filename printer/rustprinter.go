@@ -45,7 +45,7 @@ func (p *RustPrinter) IsSameLine() bool {
 }
 
 func (p *RustPrinter) Chop(line string) string {
-	return strings.TrimRight(line, COMMANL)
+	return strings.TrimRight(line, ", \n")
 }
 
 func (p *RustPrinter) indent() string {
@@ -142,6 +142,10 @@ func (p *RustPrinter) PrintStmt(stmt, expr string) {
 }
 
 func (p *RustPrinter) PrintReturn(expr string, tuple bool) {
+	if tuple {
+		expr = "(" + expr + ")"
+	}
+
 	p.PrintStmt("return", expr)
 }
 
