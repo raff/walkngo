@@ -88,8 +88,12 @@ func main() {
 		p = &printer.RustPrinter{}
 		*lang = "rust"
 
+	case "swift":
+		p = &printer.SwiftPrinter{}
+		*lang = ".swift"
+
 	default:
-		fmt.Println("unsupported language", *lang, "use c, go or rust")
+		fmt.Println("unsupported language", *lang, "use c, go, rust or swift")
 		return
 	}
 
