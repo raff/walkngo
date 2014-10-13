@@ -76,7 +76,7 @@ func main() {
 	var p printer.Printer
 
 	switch *lang {
-	case "c":
+	case "c", "cc":
 		p = &printer.CPrinter{}
 		*lang = "cc"
 
@@ -84,9 +84,9 @@ func main() {
 		p = &printer.GoPrinter{}
 		*lang = "go"
 
-	case "rust":
+	case "rust", "rs":
 		p = &printer.RustPrinter{}
-		*lang = "rust"
+		*lang = "rs"
 
 	case "swift":
 		p = &printer.SwiftPrinter{}

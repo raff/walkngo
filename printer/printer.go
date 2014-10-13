@@ -205,4 +205,17 @@ func IsPublic(name string) bool {
 
 	// shouldn't get here, unless the string is empty
 	return false
+<<<<<<< HEAD
+=======
+}
+
+//
+// IfTrue returns the input value if the condition is true, an empty string otherwise
+//
+func IfTrue(val string, cond bool) (ret string) {
+	if cond {
+		return val
+	}
+	return
+>>>>>>> 7ee1a1fe71dc3f4f5e2f07b17958f2f2b46ed6b2
 }
