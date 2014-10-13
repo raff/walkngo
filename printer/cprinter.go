@@ -303,7 +303,7 @@ func (p *CPrinter) PrintSwitch(init, expr string) {
 
 func (p *CPrinter) PrintCase(expr string) {
 	if len(expr) > 0 {
-		p.PrintLevel(NL, "case", expr+":")
+		p.PrintLevel(COLON, "case", expr)
 	} else {
 		p.PrintLevel(NL, "default:")
 	}

@@ -66,7 +66,7 @@ func (p *RustPrinter) PrintLevel(term string, values ...string) {
 }
 
 func (p *RustPrinter) PrintfLevel(term string, format string, values ...interface{}) {
-	fmt.Fprintf(p.w, p.indent() + format + term, values...)
+	fmt.Fprintf(p.w, p.indent()+format+term, values...)
 }
 
 func (p *RustPrinter) PrintBlockStart(b BlockType) {
@@ -202,7 +202,7 @@ func (p *RustPrinter) PrintSwitch(init, expr string) {
 
 func (p *RustPrinter) PrintCase(expr string) {
 	if len(expr) > 0 {
-		p.PrintLevel(SEMI, "case", expr)
+		p.PrintLevel(COLON, "case", expr)
 	} else {
 		p.PrintLevel(NL, "default:")
 	}

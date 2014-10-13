@@ -183,7 +183,7 @@ func (p *GoPrinter) PrintSwitch(init, expr string) {
 
 func (p *GoPrinter) PrintCase(expr string) {
 	if len(expr) > 0 {
-		p.PrintLevel(SEMI, "case", expr)
+		p.PrintLevel(COLON, "case", expr)
 	} else {
 		p.PrintLevel(NL, "default:")
 	}
