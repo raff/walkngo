@@ -116,7 +116,7 @@ func (p *SwiftPrinter) PrintValue(vtype, typedef, names, values string, ntuple, 
 
 	p.PrintLevel(NONE, vtype, names)
 	if len(typedef) > 0 {
-		p.Print(" ", typedef)
+		p.Print(": ", typedef)
 	}
 	if len(values) > 0 {
 		p.Print(" =", values)
@@ -177,7 +177,7 @@ func (p *SwiftPrinter) PrintRange(key, value, expr string) {
 		p.Print(",", value)
 	}
 
-	p.Print(" := range", expr)
+	p.Print(" in", expr)
 
 }
 
@@ -246,7 +246,15 @@ func (p *SwiftPrinter) FormatLiteral(lit string) string {
 }
 
 func (p *SwiftPrinter) FormatCompositeLit(typedef, elt string) string {
-	return fmt.Sprintf("%s{%s}", typedef, elt)
+	if strings.HasPrefix(typedef, "Array<") || strings.HasPrefix(typedef, "Slice<") || strings.HasPrefix(typedef, "Dictionary<") {
+		if len(elt) > 0 {
+			return fmt.Sprintf("[ %s ]", elt)
+		} else {
+			return fmt.Sprintf("%s()", typedef)
+		}
+	} else {
+		return fmt.Sprintf("%s{%s}", typedef, elt)
+	}
 }
 
 func (p *SwiftPrinter) FormatEllipsis(expr string) string {
@@ -282,8 +290,12 @@ func (p *SwiftPrinter) FormatPair(v Pair, t FieldType) string {
 	}
 }
 
-func (p *SwiftPrinter) FormatArray(len, elt string) string {
-	return fmt.Sprintf("[%s]%s", len, elt)
+func (p *SwiftPrinter) FormatArray(l, elt string) string {
+	if len(l) == 0 {
+		return fmt.Sprintf("Slice<%s>", elt)
+	} else {
+		return fmt.Sprintf("Array<%s>", elt)
+	}
 }
 
 func (p *SwiftPrinter) FormatArrayIndex(array, index string) string {
