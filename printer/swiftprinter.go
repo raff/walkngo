@@ -233,6 +233,28 @@ func (p *SwiftPrinter) FormatIdent(id string) (ret string) {
 
 	case "string":
 		ret = "String"
+	case "int":
+		ret = "Int"
+	case "int8":
+		ret = "Int8"
+	case "int32":
+		ret = "Int32"
+	case "int64":
+		ret = "Int64"
+	case "uint":
+		ret = "UInt"
+	case "uint8":
+		ret = "UInt8"
+	case "uint32":
+		ret = "UInt32"
+	case "uint64":
+		ret = "UInt64"
+	case "float32":
+		ret = "Float"
+	case "float64":
+		ret = "Double"
+	case "bool":
+		ret = "Bool"
 
 	default:
 		ret = id
