@@ -58,7 +58,7 @@ type Printer interface {
 	PopContext()
 
 	// print start block "{"
-	PrintBlockStart(b BlockType)
+	PrintBlockStart(b BlockType, empty bool)
 
 	// print end block "}"
 	PrintBlockEnd(b BlockType)

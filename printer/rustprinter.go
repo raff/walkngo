@@ -69,7 +69,7 @@ func (p *RustPrinter) PrintfLevel(term string, format string, values ...interfac
 	fmt.Fprintf(p.w, p.indent()+format+term, values...)
 }
 
-func (p *RustPrinter) PrintBlockStart(b BlockType) {
+func (p *RustPrinter) PrintBlockStart(b BlockType, empty bool) {
 	var open string
 
 	switch b {

@@ -65,7 +65,7 @@ func (p *SwiftPrinter) PrintLevel(term string, values ...string) {
 	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "), term)
 }
 
-func (p *SwiftPrinter) PrintBlockStart(b BlockType) {
+func (p *SwiftPrinter) PrintBlockStart(b BlockType, empty bool) {
 	var open string
 
 	switch b {

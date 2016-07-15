@@ -65,7 +65,7 @@ func (p *GoPrinter) PrintLevel(term string, values ...string) {
 	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "), term)
 }
 
-func (p *GoPrinter) PrintBlockStart(b BlockType) {
+func (p *GoPrinter) PrintBlockStart(b BlockType, empty bool) {
 	var open string
 
 	switch b {

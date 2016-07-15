@@ -52,8 +52,8 @@ func (d *DebugPrinter) PrintLevel(term string, values ...string) {
 	d.P.PrintLevel(term, values...)
 }
 
-func (d *DebugPrinter) PrintBlockStart(b BlockType) {
-	d.P.PrintBlockStart(b)
+func (d *DebugPrinter) PrintBlockStart(b BlockType, empty bool) {
+	d.P.PrintBlockStart(b, empty)
 }
 
 func (d *DebugPrinter) PrintBlockEnd(b BlockType) {

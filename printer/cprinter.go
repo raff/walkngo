@@ -107,7 +107,7 @@ func (p *CPrinter) PrintLevelIn(term string, values ...string) {
 	p.level += 1
 }
 
-func (p *CPrinter) PrintBlockStart(b BlockType) {
+func (p *CPrinter) PrintBlockStart(b BlockType, empty bool) {
 	var open string
 
 	switch b {

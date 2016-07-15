@@ -104,7 +104,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.PopContext()
 
 	case *ast.BlockStmt:
-		w.p.PrintBlockStart(printer.CODE)
+		w.p.PrintBlockStart(printer.CODE, len(n.List) == 0)
 		for _, i := range n.List {
 			w.Visit(i)
 		}
