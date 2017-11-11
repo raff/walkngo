@@ -80,7 +80,7 @@ func (p *PythonPrinter) PrintBlockStart(b BlockType, empty bool) {
 	*/
 
 	p.UpdateLevel(UP)
-	p.Print("\n")
+	p.PrintLevel(NL, "")
 
 	if empty {
 		p.PrintLevel(NL, "pass")
@@ -100,6 +100,7 @@ func (p *PythonPrinter) PrintBlockEnd(b BlockType) {
 	*/
 
 	p.UpdateLevel(DOWN)
+	p.PrintLevel(NONE, "")
 
 	//p.PrintLevel(NONE, close)
 }
@@ -147,12 +148,23 @@ func (p *PythonPrinter) PrintFunc(receiver, name, params, results string) {
 	p.PrintLevel(NONE, "def ")
 
 	if len(receiver) > 0 {
-		params = "self, " + params
+		if len(params) > 0 {
+			params = "self, " + params
+		} else {
+			params = "self"
+		}
 	}
 
 	fmt.Fprintf(p.w, "%s(%s):", name, params)
 	if len(receiver) > 0 || len(results) > 0 {
-		fmt.Fprintf(p.w, "  # receiver: %v, results: %v\n", receiver, results)
+		fmt.Fprintf(p.w, "  #")
+
+		if len(receiver) > 0 {
+			fmt.Fprintf(p.w, " receiver:[%v]", receiver)
+		}
+		if len(results) > 0 {
+			fmt.Fprintf(p.w, " returns:[%v]", results)
+		}
 	}
 }
 
@@ -175,13 +187,17 @@ func (p *PythonPrinter) PrintFor(init, cond, post string) {
 }
 
 func (p *PythonPrinter) PrintRange(key, value, expr string) {
+	//
+	// Here we don't know if it's an array (index, value) or a map (key, value)
+	//
+
 	p.PrintLevel(NONE, "for", key)
 
 	if len(value) > 0 {
 		p.Print(",", value)
 	}
 
-	p.Print(" := range", expr)
+	p.Print(" in", expr)
 
 }
 
@@ -256,7 +272,7 @@ func (p *PythonPrinter) FormatCompositeLit(typedef, elt string) string {
 }
 
 func (p *PythonPrinter) FormatEllipsis(expr string) string {
-	return fmt.Sprintf("...%s", expr)
+	return fmt.Sprintf("*%s", expr)
 }
 
 func (p *PythonPrinter) FormatStar(expr string) string {
