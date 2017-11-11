@@ -33,10 +33,12 @@ func (d *DebugPrinter) UpdateLevel(delta int) {
 }
 
 func (d *DebugPrinter) SameLine() {
+	fmt.Print("/* SameLine */")
 	d.P.SameLine()
 }
 
 func (d *DebugPrinter) IsSameLine() bool {
+	fmt.Print("/* IsSameLine */")
 	return d.P.IsSameLine()
 }
 
@@ -53,11 +55,13 @@ func (d *DebugPrinter) PrintLevel(term string, values ...string) {
 }
 
 func (d *DebugPrinter) PrintBlockStart(b BlockType, empty bool) {
+	fmt.Print("/* PrintBlockStart", b, "*/")
 	d.P.PrintBlockStart(b, empty)
 }
 
 func (d *DebugPrinter) PrintBlockEnd(b BlockType) {
 	d.P.PrintBlockEnd(b)
+	fmt.Print("/* PrintBlockEnd", "*/")
 }
 
 func (d *DebugPrinter) PrintPackage(name string) {
