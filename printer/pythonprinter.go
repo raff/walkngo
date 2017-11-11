@@ -81,6 +81,7 @@ func (p *PythonPrinter) PrintBlockStart(b BlockType, empty bool) {
 
 	p.UpdateLevel(UP)
 	p.PrintLevel(NL, "")
+	p.sameline = false
 
 	if empty {
 		p.PrintLevel(NL, "pass")
@@ -225,11 +226,11 @@ func (p *PythonPrinter) PrintIf(init, cond string) {
 	if len(init) > 0 {
 		p.PrintLevel(NL, init)
 	}
-	p.PrintLevel(NONE, "if", cond, ":")
+	p.PrintLevel(NL, "if", cond, ":")
 }
 
 func (p *PythonPrinter) PrintElse() {
-	p.PrintLevel(NONE, "else:")
+	p.PrintLevel(NL, "else:")
 }
 
 func (p *PythonPrinter) PrintEmpty() {
@@ -392,4 +393,12 @@ func (p *PythonPrinter) FormatSelector(pname, sel string, isObject bool) string 
 
 func (p *PythonPrinter) FormatTypeAssert(orig, assert string) string {
 	return fmt.Sprintf("%s.(%s)", orig, assert)
+}
+
+func Nil(v string) string {
+	if v == "" {
+		return "<nil>"
+	} else {
+		return v
+	}
 }
