@@ -69,7 +69,7 @@ func main() {
 	debug := flag.Bool("debug", false, "print AST nodes")
 	pdebug := flag.Bool("debug-printer", false, "print Printer calls")
 	outd := flag.String("outdir", "", "create converted files in outdir")
-	lang := flag.String("lang", "go", "convert to specified language (go, c, rust)")
+	lang := flag.String("lang", "go", "convert to specified language (go, c, rust, swift, python)")
 
 	flag.Parse()
 
