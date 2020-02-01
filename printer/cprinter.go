@@ -238,7 +238,7 @@ func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
 		if len(results) == 0 {
 			results = "void"
 		} else if IsMultiValue(results) {
-			results = fmt.Sprintf("tuple<%s>", results)
+			results = fmt.Sprintf("std::tuple<%s>", results)
 		}
 
 		if len(receiver) > 0 {
@@ -549,7 +549,7 @@ func (p *CPrinter) FormatFuncType(params, results string, withFunc bool) string 
 	if len(results) == 0 {
 		results = "void"
 	} else if IsMultiValue(results) {
-		results = fmt.Sprintf("tuple<%s>", results)
+		results = fmt.Sprintf("std::tuple<%s>", results)
 	}
 
 	// add %%s only if withFunc ?
