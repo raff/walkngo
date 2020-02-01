@@ -9,6 +9,8 @@ import (
 	"io"
 	"strings"
 
+	"sort"
+
 	"github.com/raff/walkngo/printer"
 )
 
@@ -16,12 +18,13 @@ import (
 // GoWalker is the context for the AST visitor
 //
 type GoWalker struct {
-	p      printer.Printer
-	parent ast.Node
-	flush  bool
-	buffer bytes.Buffer
-	writer io.Writer
-	debug  bool
+	p           printer.Printer
+	parent      ast.Node
+	flush       bool
+	buffer      bytes.Buffer
+	writer      io.Writer
+	debug       bool
+	sortStructs bool
 }
 
 func NewWalker(p printer.Printer, out io.Writer, debug bool) *GoWalker {
@@ -357,24 +360,32 @@ func (w *GoWalker) parseExprList(l []ast.Expr) string {
 }
 
 func (w *GoWalker) parseFieldList(l *ast.FieldList, ftype printer.FieldType) string {
-	buffer := bytes.NewBufferString("")
+	var ll []string
 
 	if l != nil {
 		for _, f := range l.List {
 			ptype := w.parseExpr(f.Type)
 
+			if f.Tag != nil {
+				ptype += " " + f.Tag.Value
+			}
+
 			if len(f.Names) == 0 {
 				// type only
-				buffer.WriteString(w.p.FormatPair(printer.Pair{"", ptype}, ftype))
+				ll = append(ll, w.p.FormatPair(printer.Pair{"", ptype}, ftype))
 			}
 
 			for _, n := range f.Names {
-				buffer.WriteString(w.p.FormatPair(printer.Pair{n.Name, ptype}, ftype))
+				ll = append(ll, w.p.FormatPair(printer.Pair{n.Name, ptype}, ftype))
 			}
 		}
 	}
 
-	return w.p.Chop(buffer.String())
+	if ftype == printer.FIELD && w.sortStructs {
+		sort.Strings(ll)
+	}
+
+	return w.p.Chop(strings.Join(ll, ""))
 }
 
 func (w *GoWalker) parseNames(v []*ast.Ident) string {
