@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"unicode"
-	"unicode/utf8"
 )
 
 //
@@ -20,8 +18,7 @@ type JavaPrinter struct {
 }
 
 func mod(name string) string {
-	first, _ := utf8.DecodeRuneInString(name)
-	if unicode.IsUpper(first) {
+	if IsPublic(name) {
 		return "public"
 	}
 

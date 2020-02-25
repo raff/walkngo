@@ -3,6 +3,7 @@ package printer
 import (
 	"io"
 	"unicode"
+	"unicode/utf8"
 )
 
 // FieldType describes the type of field in a list (struct field, param field, result field, etc.)
@@ -196,15 +197,8 @@ func (p Pair) String() string {
 // Is this name public
 //
 func IsPublic(name string) bool {
-	//
-	// get the first "rune" and check if is UpperCase
-	//
-	for _, rune := range name {
-		return unicode.IsUpper(rune)
-	}
-
-	// shouldn't get here, unless the string is empty
-	return false
+	first, _ := utf8.DecodeRuneInString(name)
+	return unicode.IsUpper(first)
 }
 
 //
