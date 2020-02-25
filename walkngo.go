@@ -84,20 +84,28 @@ func main() {
 		p = &printer.GoPrinter{}
 		*lang = "go"
 
+	case "js":
+		p = &printer.JsPrinter{}
+		*lang = "js"
+
+	case "java":
+		p = &printer.JavaPrinter{}
+		*lang = "java"
+
 	case "rust", "rs":
 		p = &printer.RustPrinter{}
 		*lang = "rs"
 
 	case "swift":
 		p = &printer.SwiftPrinter{}
-		*lang = ".swift"
+		*lang = "swift"
 
 	case "python":
 		p = &printer.PythonPrinter{}
-		*lang = ".py"
+		*lang = "py"
 
 	default:
-		fmt.Println("unsupported language", *lang, "use c, go, rust, swift, python")
+		fmt.Println("unsupported language", *lang, "use c, go, js, java, rust, swift, python")
 		return
 	}
 
