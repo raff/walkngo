@@ -15,6 +15,34 @@ type JavaPrinter struct {
 	level    int
 	sameline bool
 	w        io.Writer
+
+	ctx *Jcontext
+}
+
+//
+// Jcontext is the context for a (function) block
+//
+type Jcontext struct {
+	iota int // incremented when 'const n = iota' or 'const n'
+
+	deferred int // used to generate unique names for "defer" callbacks
+
+	receiver        string // the name of the receiver, to be converted to "this"
+	ret_definitions string // used to define return variables
+	ret_values      string // used to "fill" empty returns
+
+	fall_through bool // fall through next case in switch
+	case_break   bool // got case break
+
+	next *Jcontext
+}
+
+func (ctx *Jcontext) Selector(s string) string {
+	if ctx != nil && ctx.receiver == s {
+		return "this"
+	}
+
+	return s
 }
 
 func mod(name string) string {
@@ -76,12 +104,15 @@ func javatype(t string) string {
 func (p *JavaPrinter) Reset() {
 	p.level = 0
 	p.sameline = false
+	p.ctx = nil
 }
 
 func (p *JavaPrinter) PushContext() {
+	p.ctx = &Jcontext{next: p.ctx}
 }
 
 func (p *JavaPrinter) PopContext() {
+	p.ctx = p.ctx.next
 }
 
 func (p *JavaPrinter) SetWriter(w io.Writer) {
@@ -189,6 +220,11 @@ func (p *JavaPrinter) PrintValue(vtype, typedef, names, values string, ntuple, v
 }
 
 func (p *JavaPrinter) PrintStmt(stmt, expr string) {
+	if stmt == "fallthrough" {
+		p.ctx.fall_through = true
+		return
+	}
+
 	if len(stmt) > 0 {
 		p.PrintLevel(SEMI, stmt, expr)
 	} else {
@@ -201,20 +237,28 @@ func (p *JavaPrinter) PrintReturn(expr string, tuple bool) {
 }
 
 func (p *JavaPrinter) PrintFunc(receiver, name, params, results string) {
+	if len(receiver) == 0 && len(params) == 0 && len(results) == 0 && name == "main" {
+		// the "main"
+		p.Print("public static void main(String[] args) ")
+		return
+	}
+
 	p.PrintLevel(NONE, mod(name), "")
 	if len(receiver) > 0 {
 		fmt.Fprintf(p.w, "/* %s */ ", receiver)
+		parts := strings.SplitN(receiver, " ", 2)
+		p.ctx.receiver = parts[1]
 	}
-	if len(results) > 0 {
-		if strings.ContainsAny(results, " ,") {
-			// name type or multiple types
-			fmt.Fprintf(p.w, "(%s) ", results)
-		} else {
-			p.Print(javatype(results), "")
-		}
-	} else {
+
+	if len(results) == 0 {
 		p.Print("void ")
+	} else if IsMultiValue(results) {
+		// name type or multiple types
+		fmt.Fprintf(p.w, "Tuple<%s> ", results)
+	} else {
+		p.Print(javatype(results), "")
 	}
+
 	fmt.Fprintf(p.w, "%s(%s) ", name, params)
 }
 
@@ -242,19 +286,20 @@ func (p *JavaPrinter) PrintRange(key, value, expr string) {
 		p.Print(",", value)
 	}
 
-	p.Print(" := range", expr)
+	p.Print(" : ", expr)
 
 }
 
 func (p *JavaPrinter) PrintSwitch(init, expr string) {
-	p.PrintLevel(NONE, "switch ")
 	if len(init) > 0 {
-		p.Print(init + "; ")
+		p.PrintLevel(SEMI, init)
 	}
-	p.Print(expr)
+	p.PrintLevel(NONE, "switch (", expr, ")")
 }
 
 func (p *JavaPrinter) PrintCase(expr string) {
+	p.ctx.fall_through = false
+
 	if len(expr) > 0 {
 		p.PrintLevel(COLON, "case", expr)
 	} else {
@@ -263,15 +308,18 @@ func (p *JavaPrinter) PrintCase(expr string) {
 }
 
 func (p *JavaPrinter) PrintEndCase() {
-	// nothing to do
+	if !p.ctx.fall_through {
+		p.PrintLevel(NL, "break")
+	}
 }
 
 func (p *JavaPrinter) PrintIf(init, cond string) {
-	p.PrintLevel(NONE, "if (")
 	if len(init) > 0 {
-		p.Print(init + "; ")
+		p.PrintLevel(NONE, init+" if ")
+	} else {
+		p.PrintLevel(NONE, "if ")
 	}
-	p.Print(cond+")", "")
+	p.Print("(", cond, ") ")
 }
 
 func (p *JavaPrinter) PrintElse() {
@@ -339,7 +387,15 @@ func (p *JavaPrinter) FormatPair(v Pair, t FieldType) string {
 	case PARAM, RECEIVER:
 		return javatype(v.Value()) + " " + v.Name() + COMMA
 	case FIELD:
-		return p.indent() + javatype(v.Value()) + " " + v.Name() + SEMI
+		typedef := v.Value()
+		tag := ""
+		parts := strings.SplitN(typedef, " `", 2)
+		if len(parts) == 2 {
+			typedef = parts[0]
+			tag = fmt.Sprintf(" @Tag(%q)", strings.TrimRight(parts[1], "`"))
+		}
+
+		return p.indent() + javatype(typedef) + " " + v.Name() + tag + SEMI
 	default:
 		return v.String() + COMMA
 	}
@@ -422,9 +478,9 @@ func (p *JavaPrinter) FormatFuncType(params, results string, withFunc bool) stri
 		return fmt.Sprintf("void %s(%s)", prefix, params)
 	}
 
-	if strings.ContainsAny(results, ", ") {
+	if IsMultiValue(results) {
 		// name type or multiple types
-		return fmt.Sprintf("/* (%s) */ %s(%s)", results, prefix, params)
+		return fmt.Sprintf("Tuple<%s> %s(%s)", results, prefix, params)
 	}
 
 	// just type
@@ -432,11 +488,15 @@ func (p *JavaPrinter) FormatFuncType(params, results string, withFunc bool) stri
 }
 
 func (p *JavaPrinter) FormatFuncLit(ftype, body string) string {
-	return fmt.Sprintf("func%s %s", ftype, body)
+	return fmt.Sprintf("%s -> %s", ftype, body)
 }
 
 func (p *JavaPrinter) FormatSelector(pname, sel string, isObject bool) string {
-	return fmt.Sprintf("%s.%s", pname, sel)
+	if isObject {
+		return fmt.Sprintf("%s.%s", p.ctx.Selector(pname), sel)
+	} else {
+		return fmt.Sprintf("%s.%s", pname, sel)
+	}
 }
 
 func (p *JavaPrinter) FormatTypeAssert(orig, assert string) string {

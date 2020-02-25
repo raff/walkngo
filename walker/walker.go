@@ -135,16 +135,20 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.Print("\n")
 
 	case *ast.SwitchStmt:
+		w.p.PushContext()
 		w.p.Print("\n")
 		w.p.PrintSwitch(w.BufferVisit(n.Init), w.parseExpr(n.Tag))
 		w.Visit(n.Body)
 		w.p.Print("\n")
+		w.p.PopContext()
 
 	case *ast.TypeSwitchStmt:
+		w.p.PushContext()
 		w.p.Print("\n")
 		w.p.PrintSwitch(w.BufferVisit(n.Init), w.BufferVisit(n.Assign))
 		w.Visit(n.Body)
 		w.p.Print("\n")
+		w.p.PopContext()
 
 	case *ast.CaseClause:
 		w.p.PrintCase(w.parseExprList(n.List))
