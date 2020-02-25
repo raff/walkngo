@@ -346,7 +346,7 @@ func (p *JavaPrinter) FormatPair(v Pair, t FieldType) string {
 }
 
 func (p *JavaPrinter) FormatArray(len, elt string) string {
-	return fmt.Sprintf("[%s]%s", len, elt)
+	return fmt.Sprintf("%s[%s]", elt, len)
 }
 
 func (p *JavaPrinter) FormatArrayIndex(array, index string) string {
@@ -390,6 +390,24 @@ func (p *JavaPrinter) FormatChan(chdir, mtype string) string {
 }
 
 func (p *JavaPrinter) FormatCall(fun, args string, isFuncLit bool) string {
+	switch fun {
+	case "make":
+		parts := strings.Split(args, ", ")
+		if len(parts) == 2 { // make(type, len)
+			if strings.Contains(parts[0], "[]") { // make slice
+				atype := strings.Replace(parts[0], "[]", "", 1)
+				alen := parts[1]
+
+				return fmt.Sprintf("new %s[%s]", atype, alen)
+			}
+		}
+
+	case "new":
+		return fmt.Sprintf("new %s", args)
+
+	case "len":
+		return fmt.Sprintf("%s.length", args)
+	}
 	return fmt.Sprintf("%s(%s)", fun, args)
 }
 
