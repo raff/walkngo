@@ -16,8 +16,8 @@ func (d *DebugPrinter) Reset() {
 	d.P.Reset()
 }
 
-func (d *DebugPrinter) PushContext() {
-	d.P.PushContext()
+func (d *DebugPrinter) PushContext(c ContextType) {
+	d.P.PushContext(c)
 }
 
 func (d *DebugPrinter) PopContext() {

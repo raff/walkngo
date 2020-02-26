@@ -22,7 +22,7 @@ func (p *RustPrinter) Reset() {
 	p.sameline = false
 }
 
-func (p *RustPrinter) PushContext() {
+func (p *RustPrinter) PushContext(c ContextType) {
 }
 
 func (p *RustPrinter) PopContext() {

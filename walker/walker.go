@@ -89,14 +89,14 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 	case *ast.GenDecl:
 		w.p.Print("\n")
-		w.p.PushContext()
+		w.p.PushContext(printer.GENCONTEXT)
 		for _, s := range n.Specs {
 			w.Visit(s)
 		}
 		w.p.PopContext()
 
 	case *ast.FuncDecl:
-		w.p.PushContext()
+		w.p.PushContext(printer.FUNCONTEXT)
 		w.p.Print("\n")
 		w.p.PrintFunc(w.parseFieldList(n.Recv, printer.RECEIVER),
 			n.Name.String(),
@@ -135,7 +135,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.Print("\n")
 
 	case *ast.SwitchStmt:
-		w.p.PushContext()
+		w.p.PushContext(printer.SWITCHCONTEXT)
 		w.p.Print("\n")
 		w.p.PrintSwitch(w.BufferVisit(n.Init), w.parseExpr(n.Tag))
 		w.Visit(n.Body)
@@ -143,7 +143,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.PopContext()
 
 	case *ast.TypeSwitchStmt:
-		w.p.PushContext()
+		w.p.PushContext(printer.TYPESWITCHCONTEXT)
 		w.p.Print("\n")
 		w.p.PrintSwitch(w.BufferVisit(n.Init), w.BufferVisit(n.Assign))
 		w.Visit(n.Body)

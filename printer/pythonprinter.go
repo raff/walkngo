@@ -22,7 +22,7 @@ func (p *PythonPrinter) Reset() {
 	p.sameline = false
 }
 
-func (p *PythonPrinter) PushContext() {
+func (p *PythonPrinter) PushContext(c ContextType) {
 }
 
 func (p *PythonPrinter) PopContext() {

@@ -56,7 +56,7 @@ func (p *CPrinter) Reset() {
 	p.ctx = nil
 }
 
-func (p *CPrinter) PushContext() {
+func (p *CPrinter) PushContext(c ContextType) {
 	p.ctx = &CContext{next: p.ctx}
 }
 

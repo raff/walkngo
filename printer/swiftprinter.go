@@ -22,7 +22,7 @@ func (p *SwiftPrinter) Reset() {
 	p.sameline = false
 }
 
-func (p *SwiftPrinter) PushContext() {
+func (p *SwiftPrinter) PushContext(c ContextType) {
 }
 
 func (p *SwiftPrinter) PopContext() {

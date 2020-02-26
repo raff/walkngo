@@ -12,6 +12,9 @@ type FieldType int
 // BlockType describes the type of block (code block, const definition block, etc.)
 type BlockType int
 
+// ContextType describes the type of the current context (gen, function, switch)
+type ContextType int
+
 const (
 	UP   = +1
 	DOWN = -1
@@ -39,6 +42,11 @@ const (
 	COLON   = ":\n"
 	COMMA   = ", "
 	COMMANL = ",\n"
+
+	GENCONTEXT ContextType = iota
+	FUNCONTEXT
+	SWITCHCONTEXT
+	TYPESWITCHCONTEXT
 )
 
 //
@@ -55,7 +63,7 @@ type Printer interface {
 	PrintLevel(term string, values ...string)
 	Chop(line string) string
 
-	PushContext()
+	PushContext(c ContextType)
 	PopContext()
 
 	// print start block "{"

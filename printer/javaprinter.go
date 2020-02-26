@@ -107,7 +107,7 @@ func (p *JavaPrinter) Reset() {
 	p.ctx = nil
 }
 
-func (p *JavaPrinter) PushContext() {
+func (p *JavaPrinter) PushContext(c ContextType) {
 	p.ctx = &Jcontext{next: p.ctx}
 }
 
@@ -263,7 +263,7 @@ func (p *JavaPrinter) PrintFunc(receiver, name, params, results string) {
 }
 
 func (p *JavaPrinter) PrintFor(init, cond, post string) {
-	p.PrintLevel(NONE, "for ")
+	p.PrintLevel(NONE, "for (")
 	if len(init) > 0 {
 		p.Print(init)
 	}
@@ -276,17 +276,17 @@ func (p *JavaPrinter) PrintFor(init, cond, post string) {
 		p.Print(post)
 	}
 
-	p.Print("")
+	p.Print(")")
 }
 
 func (p *JavaPrinter) PrintRange(key, value, expr string) {
-	p.PrintLevel(NONE, "for", key)
+	p.PrintLevel(NONE, "for (", key)
 
 	if len(value) > 0 {
 		p.Print(",", value)
 	}
 
-	p.Print(" : ", expr)
+	p.Print(" : ", expr, ")")
 
 }
 
