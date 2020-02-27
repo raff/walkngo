@@ -218,3 +218,18 @@ func IfTrue(val string, cond bool) (ret string) {
 	}
 	return
 }
+
+func (c ContextType) String() string {
+	switch c {
+	case GENCONTEXT:
+		return "GENCONTEXT"
+	case FUNCONTEXT:
+		return "FUNCONTEXT"
+	case SWITCHCONTEXT:
+		return "SWITCHCONTEXT"
+	case TYPESWITCHCONTEXT:
+		return "TYPESWITCHCONTEXT"
+	}
+
+	return "<UNKNOWN ContextType>"
+}

@@ -34,7 +34,8 @@ type Jcontext struct {
 	fall_through bool // fall through next case in switch
 	case_break   bool // got case break
 
-	next *Jcontext
+	ctype ContextType
+	next  *Jcontext
 }
 
 func (ctx *Jcontext) Selector(s string) string {
@@ -45,12 +46,28 @@ func (ctx *Jcontext) Selector(s string) string {
 	return s
 }
 
-func mod(name string) string {
-	if IsPublic(name) {
-		return "public"
+func (ctx *Jcontext) findContextType(c ContextType) bool {
+	for ; ctx != nil; ctx = ctx.next {
+		if ctx.ctype == c {
+			return true
+		}
 	}
 
-	return "private"
+	return false
+}
+
+func (ctx *Jcontext) mod(name string) string {
+	// fmt.Println("MOD", ctx.ctype, name)
+
+	if !ctx.findContextType(FUNCONTEXT) {
+		if IsPublic(name) {
+			return "public "
+		}
+
+		return "private "
+	}
+
+	return ""
 }
 
 func javatype(t string) string {
@@ -108,7 +125,7 @@ func (p *JavaPrinter) Reset() {
 }
 
 func (p *JavaPrinter) PushContext(c ContextType) {
-	p.ctx = &Jcontext{next: p.ctx}
+	p.ctx = &Jcontext{ctype: c, next: p.ctx}
 }
 
 func (p *JavaPrinter) PopContext() {
@@ -191,14 +208,14 @@ func (p *JavaPrinter) PrintImport(name, path string) {
 func (p *JavaPrinter) PrintType(name, typedef string) {
 	//p.PrintLevel(NL, "type", name, typedef)
 
-	cdef := mod(name)
+	cdef := p.ctx.mod(name)
 
 	if strings.HasPrefix(typedef, "struct{") {
 		typedef = typedef[6:]
-		cdef += " class"
+		cdef += "class"
 	} else if strings.HasPrefix(typedef, "interface{") {
 		typedef = typedef[9:]
-		cdef += " interface"
+		cdef += "interface"
 	}
 
 	p.PrintLevel(NL, cdef, name, javatype(typedef))
@@ -210,7 +227,7 @@ func (p *JavaPrinter) PrintValue(vtype, typedef, names, values string, ntuple, v
 		def = "final "
 	}
 
-	def += mod(names)
+	def += p.ctx.mod(names)
 
 	p.PrintLevel(NONE, def, javatype(typedef), names)
 	if len(values) > 0 {
@@ -243,7 +260,7 @@ func (p *JavaPrinter) PrintFunc(receiver, name, params, results string) {
 		return
 	}
 
-	p.PrintLevel(NONE, mod(name), "")
+	p.PrintLevel(NONE, p.ctx.mod(name))
 	if len(receiver) > 0 {
 		fmt.Fprintf(p.w, "/* %s */ ", receiver)
 		parts := strings.SplitN(receiver, " ", 2)
@@ -446,6 +463,8 @@ func (p *JavaPrinter) FormatChan(chdir, mtype string) string {
 }
 
 func (p *JavaPrinter) FormatCall(fun, args string, isFuncLit bool) string {
+	//fmt.Println("CALL", fun, args)
+
 	switch fun {
 	case "make":
 		parts := strings.Split(args, ", ")
@@ -463,6 +482,22 @@ func (p *JavaPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 
 	case "len":
 		return fmt.Sprintf("%s.length", args)
+
+	case "strings.ToLower":
+		return fmt.Sprintf("%v.toLowerCase()", args)
+
+	case "strings.ToUpper":
+		return fmt.Sprintf("%v.toUpperCase()", args)
+
+	case "[]byte", "byte[]": // cast (string) to bytes
+		return fmt.Sprintf("%v.getBytes()", args)
+
+	case "string": // cast ([]byte) to string
+		return fmt.Sprintf("String(%v)", args)
+
+	case "byte", "char", "int", "uint", "bool", "run", "float32", "float64",
+		"int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64":
+		return fmt.Sprintf("(%v)%v", javatype(fun), args)
 	}
 	return fmt.Sprintf("%s(%s)", fun, args)
 }
