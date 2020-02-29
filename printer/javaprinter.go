@@ -56,10 +56,10 @@ func (ctx *Jcontext) findContextType(c ContextType) bool {
 	return false
 }
 
-func (ctx *Jcontext) mod(name string) string {
+func (ctx *Jcontext) mod(name string, funcdef bool) string {
 	// fmt.Println("MOD", ctx.ctype, name)
 
-	if !ctx.findContextType(FUNCONTEXT) {
+	if (funcdef && ctx.next == nil) || !ctx.findContextType(FUNCONTEXT) {
 		if IsPublic(name) {
 			return "public "
 		}
@@ -208,7 +208,7 @@ func (p *JavaPrinter) PrintImport(name, path string) {
 func (p *JavaPrinter) PrintType(name, typedef string) {
 	//p.PrintLevel(NL, "type", name, typedef)
 
-	cdef := p.ctx.mod(name)
+	cdef := p.ctx.mod(name, false)
 
 	if strings.HasPrefix(typedef, "struct{") {
 		typedef = typedef[6:]
@@ -227,7 +227,7 @@ func (p *JavaPrinter) PrintValue(vtype, typedef, names, values string, ntuple, v
 		def = "final "
 	}
 
-	def += p.ctx.mod(names)
+	def += p.ctx.mod(names, false)
 
 	p.PrintLevel(NONE, def, javatype(typedef), names)
 	if len(values) > 0 {
@@ -260,7 +260,7 @@ func (p *JavaPrinter) PrintFunc(receiver, name, params, results string) {
 		return
 	}
 
-	p.PrintLevel(NONE, p.ctx.mod(name))
+	p.PrintLevel(NONE, p.ctx.mod(name, true))
 	if len(receiver) > 0 {
 		fmt.Fprintf(p.w, "/* %s */ ", receiver)
 		parts := strings.SplitN(receiver, " ", 2)
