@@ -229,7 +229,13 @@ func (p *JavaPrinter) PrintValue(vtype, typedef, names, values string, ntuple, v
 
 	def += p.ctx.mod(names, false)
 
-	p.PrintLevel(NONE, def, javatype(typedef), names)
+	if typedef == "" {
+		typedef = "var"
+	} else {
+		typedef = javatype(typedef)
+	}
+
+	p.PrintLevel(NONE, def, typedef, names)
 	if len(values) > 0 {
 		p.Print(" =", values)
 	}
@@ -368,6 +374,10 @@ func (p *JavaPrinter) FormatIdent(id string) string {
 }
 
 func (p *JavaPrinter) FormatLiteral(lit string) string {
+	if strings.HasPrefix(lit, "`") {
+		return `"` + strings.Trim(lit, "`") + `"`
+	}
+
 	return lit
 }
 
