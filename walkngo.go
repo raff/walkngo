@@ -83,11 +83,11 @@ func main() {
 	case "go":
 		p = &printer.GoPrinter{}
 		*lang = "go"
-
-	case "js":
-		p = &printer.JsPrinter{}
-		*lang = "js"
-
+		/*
+			case "js":
+				p = &printer.JsPrinter{}
+				*lang = "js"
+		*/
 	case "java":
 		p = &printer.JavaPrinter{}
 		*lang = "java"
