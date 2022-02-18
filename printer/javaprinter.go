@@ -448,7 +448,7 @@ func (p *JavaPrinter) FormatMap(key, elt string) string {
 	return fmt.Sprintf("[%s]%s", key, elt)
 }
 
-func (p *JavaPrinter) FormatKeyValue(key, value string) string {
+func (p *JavaPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return fmt.Sprintf("%s: %s", key, value)
 }
 

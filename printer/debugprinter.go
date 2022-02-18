@@ -214,9 +214,9 @@ func (d *DebugPrinter) FormatMap(key, elt string) string {
 	return d.P.FormatMap(key, elt)
 }
 
-func (d *DebugPrinter) FormatKeyValue(key, value string) string {
-	fmt.Println("/* FormatKeyValue", key, value, "*/")
-	return d.P.FormatKeyValue(key, value)
+func (d *DebugPrinter) FormatKeyValue(key, value string, isMap bool) string {
+	fmt.Println("/* FormatKeyValue", key, value, isMap, "*/")
+	return d.P.FormatKeyValue(key, value, isMap)
 }
 
 func (d *DebugPrinter) FormatStruct(fields string) string {

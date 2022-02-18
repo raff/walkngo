@@ -280,7 +280,7 @@ func (p *GoPrinter) FormatMap(key, elt string) string {
 	return fmt.Sprintf("[%s]%s", key, elt)
 }
 
-func (p *GoPrinter) FormatKeyValue(key, value string) string {
+func (p *GoPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return fmt.Sprintf("%s: %s", key, value)
 }
 

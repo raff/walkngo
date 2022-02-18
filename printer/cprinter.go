@@ -365,6 +365,10 @@ func (p *CPrinter) FormatIdent(id string) (ret string) {
 
 	case "string":
 		ret = "std::string"
+
+	case "_":
+		ret = "std::ignore"
+
 	default:
 		ret = id
 	}
@@ -499,8 +503,13 @@ func (p *CPrinter) FormatMap(key, elt string) string {
 	return fmt.Sprintf("std::map<%s, %s>", key, elt)
 }
 
-func (p *CPrinter) FormatKeyValue(key, value string) string {
-	return fmt.Sprintf("{%s, %s}", key, value)
+func (p *CPrinter) FormatKeyValue(key, value string, isMap bool) string {
+	if isMap {
+		return fmt.Sprintf("{%s, %s}", key, value)
+	}
+
+	// struct
+	return fmt.Sprintf(".%s=%s", key, value)
 }
 
 func (p *CPrinter) FormatStruct(fields string) string {
@@ -515,7 +524,7 @@ func (p *CPrinter) FormatInterface(methods string) string {
 	if len(methods) > 0 {
 		return fmt.Sprintf("/* abstract */ struct {\n%s}", methods)
 	} else {
-		return "/* abstract */ struct{}"
+		return "std::any"
 	}
 }
 
@@ -542,6 +551,9 @@ func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 
 	if isFuncLit {
 		return fmt.Sprintf("[](%s)->%s", args, fun)
+	} else if fun == "len" {
+		return fmt.Sprintf("%v->size()", args)
+
 		//} else if fun == "make" {
 		//	return FormatMake(args)
 	} else {

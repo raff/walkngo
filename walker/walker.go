@@ -20,6 +20,7 @@ import (
 type GoWalker struct {
 	p           printer.Printer
 	parent      ast.Node
+	parentExpr  ast.Expr
 	flush       bool
 	buffer      bytes.Buffer
 	writer      io.Writer
@@ -64,7 +65,7 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 	}
 
 	if w.debug {
-		w.p.Print(fmt.Sprintf("/* Node: %#v */\n", node))
+		w.p.Print(fmt.Sprintf("/* Node: %#v, Parent: %#v */\n", node, w.parent))
 	}
 
 	pparent := w.parent
@@ -300,6 +301,10 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// type{list}
 	case *ast.CompositeLit:
+		pexpr := w.parentExpr
+		w.parentExpr = expr.Type
+		defer func() { w.parentExpr = pexpr }()
+
 		return w.p.FormatCompositeLit(w.parseExpr(expr.Type), w.parseExprList(expr.Elts))
 
 		// ...type
@@ -320,7 +325,8 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// key: value
 	case *ast.KeyValueExpr:
-		return w.p.FormatKeyValue(w.parseExpr(expr.Key), w.parseExpr(expr.Value))
+		_, isMap := w.parentExpr.(*ast.MapType)
+		return w.p.FormatKeyValue(w.parseExpr(expr.Key), w.parseExpr(expr.Value), isMap)
 
 		// x[low:hi:max]
 	case *ast.SliceExpr:

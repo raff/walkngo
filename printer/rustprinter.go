@@ -310,7 +310,7 @@ func (p *RustPrinter) FormatMap(key, elt string) string {
 	return fmt.Sprintf("[%s]%s", key, elt)
 }
 
-func (p *RustPrinter) FormatKeyValue(key, value string) string {
+func (p *RustPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return fmt.Sprintf("%s: %s", key, value)
 }
 

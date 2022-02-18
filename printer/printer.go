@@ -151,7 +151,7 @@ type Printer interface {
 
 	FormatMap(key, elt string) string
 
-	FormatKeyValue(key, value string) string
+	FormatKeyValue(key, value string, isMap bool) string
 
 	FormatStruct(fields string) string
 

@@ -336,7 +336,7 @@ func (p *SwiftPrinter) FormatMap(key, elt string) string {
 	return fmt.Sprintf("Dictionary<%s, %s>", key, elt)
 }
 
-func (p *SwiftPrinter) FormatKeyValue(key, value string) string {
+func (p *SwiftPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return fmt.Sprintf("%s: %s", key, value)
 }
 
