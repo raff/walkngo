@@ -475,8 +475,12 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 	return
 }
 
-func (p *CPrinter) FormatArray(len, elt string) string {
-	return fmt.Sprintf("%s[%s]", elt, len)
+func (p *CPrinter) FormatArray(alen, elt string) string {
+	if alen == "" { // slice
+		return fmt.Sprintf("std::vector<%v>", elt)
+	} else {
+		return fmt.Sprintf("%s[%s]", elt, alen)
+	}
 }
 
 func (p *CPrinter) FormatArrayIndex(array, index string) string {
@@ -492,7 +496,7 @@ func (p *CPrinter) FormatSlice(slice, low, high, max string) string {
 }
 
 func (p *CPrinter) FormatMap(key, elt string) string {
-	return fmt.Sprintf("map<%s, %s>", key, elt)
+	return fmt.Sprintf("std::map<%s, %s>", key, elt)
 }
 
 func (p *CPrinter) FormatKeyValue(key, value string) string {
@@ -509,9 +513,9 @@ func (p *CPrinter) FormatStruct(fields string) string {
 
 func (p *CPrinter) FormatInterface(methods string) string {
 	if len(methods) > 0 {
-		return fmt.Sprintf("struct {\n%s}", methods)
+		return fmt.Sprintf("/* abstract */ struct {\n%s}", methods)
 	} else {
-		return "struct{}"
+		return "/* abstract */ struct{}"
 	}
 }
 
@@ -624,7 +628,7 @@ func GuessType(value string) (string, string) {
 	//
 	// a map
 	//
-	if strings.HasPrefix(value, "map<") {
+	if strings.HasPrefix(value, "std::map<") {
 		// a map
 		if p, ok := findMatch(value, '<'); ok {
 			return value[:p+1], value
@@ -653,7 +657,7 @@ func IsMultiValue(expr string) bool {
 }
 
 func FormatMake(args string) string {
-	if strings.HasPrefix(args, "map<") {
+	if strings.HasPrefix(args, "std::map<") {
 		// make map
 		p := strings.LastIndex(args, ">")
 		return args[:p+1] + "()"
