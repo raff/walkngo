@@ -12,4 +12,4 @@ OBJECTS=$(patsubst %.go,%.$(EXT),$(wildcard tests/*.go))
 all: $(OBJECTS)
 
 clean:
-	-rm -rf tests/*.cpp tests/*.py
+	-rm -rf tests/*.cpp tests/*.py a.out

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 const (
     k = "constant"
     )
@@ -13,7 +15,6 @@ type X struct {
 }
 
 func main() {
-    var x X
-
-    x.p.Hello()
+    fmt.Println("k=constant", k=="constant", 42, 3.4)
+    fmt.Printf("k=constant %d %d %f\n", k=="constant", 42, 3.4)
 }

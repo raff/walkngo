@@ -594,6 +594,14 @@ func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {
 	case pname == "io" && sel == "SeekEnd":
 		pname = "std::ios"
 		sel = "end"
+
+	case pname == "fmt" && sel == "Printf":
+		pname = "std"
+		sel = "printf"
+
+	case pname == "fmt" && sel == "Sprintf":
+		pname = "std"
+		sel = "sprintf"
 	}
 
 	if isObject {

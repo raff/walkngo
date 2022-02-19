@@ -5,14 +5,14 @@
 
 namespace fmt {
 
-template<typename... T> void Print(T... args) {
-    int dummy[sizeof...(T)] = { (std::cout << args, 0)... };
-}
+    template<typename... T> void Print(T... args) {
+        int dummy[sizeof...(T)] = { (std::cout << args, 0)... };
+    }
 
-template<typename... T> void Println(T... args) {
-    int dummy[sizeof...(T)] = { (std::cout << args << " ", 0)... };
-    std::cout << std::endl;
-}
+    template<typename... T> void Println(T... args) {
+        int dummy[sizeof...(T)] = { (std::cout << args << " ", 0)... };
+        std::cout << std::endl;
+    }
 
 }
 
