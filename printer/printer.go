@@ -153,9 +153,9 @@ type Printer interface {
 
 	FormatKeyValue(key, value string, isMap bool) string
 
-	FormatStruct(fields string) string
+	FormatStruct(name, fields string) string
 
-	FormatInterface(methods string) string
+	FormatInterface(name, methods string) string
 
 	FormatChan(chdir, mtype string) string
 

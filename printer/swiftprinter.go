@@ -340,7 +340,7 @@ func (p *SwiftPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return fmt.Sprintf("%s: %s", key, value)
 }
 
-func (p *SwiftPrinter) FormatStruct(fields string) string {
+func (p *SwiftPrinter) FormatStruct(name, fields string) string {
 	if len(fields) > 0 {
 		return fmt.Sprintf("struct{\n%s}", fields)
 	} else {
@@ -348,7 +348,7 @@ func (p *SwiftPrinter) FormatStruct(fields string) string {
 	}
 }
 
-func (p *SwiftPrinter) FormatInterface(methods string) string {
+func (p *SwiftPrinter) FormatInterface(name, methods string) string {
 	if len(methods) > 0 {
 		return fmt.Sprintf("interface{\n%s}", methods)
 	} else {

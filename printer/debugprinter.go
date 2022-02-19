@@ -219,14 +219,14 @@ func (d *DebugPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return d.P.FormatKeyValue(key, value, isMap)
 }
 
-func (d *DebugPrinter) FormatStruct(fields string) string {
+func (d *DebugPrinter) FormatStruct(name, fields string) string {
 	fmt.Println("/* FormatStruct", fields, "*/")
-	return d.P.FormatStruct(fields)
+	return d.P.FormatStruct(name, fields)
 }
 
-func (d *DebugPrinter) FormatInterface(methods string) string {
+func (d *DebugPrinter) FormatInterface(name, methods string) string {
 	fmt.Println("/* FormatInterface", methods, "*/")
-	return d.P.FormatInterface(methods)
+	return d.P.FormatInterface(name, methods)
 }
 
 func (d *DebugPrinter) FormatChan(chdir, mtype string) string {

@@ -314,7 +314,7 @@ func (p *RustPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return fmt.Sprintf("%s: %s", key, value)
 }
 
-func (p *RustPrinter) FormatStruct(fields string) string {
+func (p *RustPrinter) FormatStruct(name, fields string) string {
 	if len(fields) > 0 {
 		return fmt.Sprintf("struct %%s {\n%s\n}", p.Chop(fields))
 	} else {
@@ -322,7 +322,7 @@ func (p *RustPrinter) FormatStruct(fields string) string {
 	}
 }
 
-func (p *RustPrinter) FormatInterface(methods string) string {
+func (p *RustPrinter) FormatInterface(name, methods string) string {
 	if len(methods) > 0 {
 		return fmt.Sprintf("interface{\n%s}", methods)
 	} else {

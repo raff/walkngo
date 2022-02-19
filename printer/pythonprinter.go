@@ -339,7 +339,7 @@ func (p *PythonPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return fmt.Sprintf("%s: %s", key, value)
 }
 
-func (p *PythonPrinter) FormatStruct(fields string) string {
+func (p *PythonPrinter) FormatStruct(name, fields string) string {
 	if len(fields) > 0 {
 		return fmt.Sprintf("struct{\n%s}", fields)
 	} else {
@@ -347,7 +347,7 @@ func (p *PythonPrinter) FormatStruct(fields string) string {
 	}
 }
 
-func (p *PythonPrinter) FormatInterface(methods string) string {
+func (p *PythonPrinter) FormatInterface(name, methods string) string {
 	if len(methods) > 0 {
 		return fmt.Sprintf("interface{\n%s}", methods)
 	} else {

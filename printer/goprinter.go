@@ -284,7 +284,7 @@ func (p *GoPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return fmt.Sprintf("%s: %s", key, value)
 }
 
-func (p *GoPrinter) FormatStruct(fields string) string {
+func (p *GoPrinter) FormatStruct(name, fields string) string {
 	if len(fields) > 0 {
 		return fmt.Sprintf("struct{\n%s}", fields)
 	} else {
@@ -292,7 +292,7 @@ func (p *GoPrinter) FormatStruct(fields string) string {
 	}
 }
 
-func (p *GoPrinter) FormatInterface(methods string) string {
+func (p *GoPrinter) FormatInterface(name, methods string) string {
 	if len(methods) > 0 {
 		return fmt.Sprintf("interface{\n%s}", methods)
 	} else {

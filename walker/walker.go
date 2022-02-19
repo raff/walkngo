@@ -266,15 +266,23 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// interface{ things }
 	case *ast.InterfaceType:
+		var name string
+		if t, ok := w.parent.(*ast.TypeSpec); ok {
+			name = t.Name.String()
+		}
 		w.p.UpdateLevel(printer.UP)
-		ret := w.p.FormatInterface(w.parseFieldList(expr.Methods, printer.METHOD))
+		ret := w.p.FormatInterface(name, w.parseFieldList(expr.Methods, printer.METHOD))
 		w.p.UpdateLevel(printer.DOWN)
 		return ret
 
 		// struct{ things }
 	case *ast.StructType:
+		var name string
+		if t, ok := w.parent.(*ast.TypeSpec); ok {
+			name = t.Name.String()
+		}
 		w.p.UpdateLevel(printer.UP)
-		ret := w.p.FormatStruct(w.parseFieldList(expr.Fields, printer.FIELD))
+		ret := w.p.FormatStruct(name, w.parseFieldList(expr.Fields, printer.FIELD))
 		w.p.UpdateLevel(printer.DOWN)
 		return ret
 
@@ -334,10 +342,14 @@ func (w *GoWalker) parseExpr(expr interface{}) string {
 
 		// package.member
 	case *ast.SelectorExpr:
-		ident, isObj := expr.X.(*ast.Ident)
-		if isObj {
+		var isObj bool
+
+		if ident, ok := expr.X.(*ast.Ident); ok {
 			isObj = ident.Obj != nil
+		} else if sel, ok := expr.X.(*ast.SelectorExpr); ok {
+			isObj = sel.Sel != nil
 		}
+
 		return w.p.FormatSelector(w.parseExpr(expr.X), w.parseExpr(expr.Sel), isObj)
 
 		// funcname(args)

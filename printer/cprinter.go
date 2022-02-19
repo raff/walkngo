@@ -512,17 +512,18 @@ func (p *CPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return fmt.Sprintf(".%s=%s", key, value)
 }
 
-func (p *CPrinter) FormatStruct(fields string) string {
+func (p *CPrinter) FormatStruct(name, fields string) string {
 	if len(fields) > 0 {
-		return fmt.Sprintf("struct {\n%s}", fields)
+		return fmt.Sprintf("struct _%s {\n%s}", name, fields)
 	} else {
 		return "struct{}"
 	}
 }
 
-func (p *CPrinter) FormatInterface(methods string) string {
+func (p *CPrinter) FormatInterface(name, methods string) string {
 	if len(methods) > 0 {
-		return fmt.Sprintf("/* abstract */ struct {\n%s}", methods)
+		name = "_" + name
+		return fmt.Sprintf("/* abstract */ struct %s {\n ~%s(){};\n%s}", name, name, methods)
 	} else {
 		return "std::any"
 	}
@@ -577,6 +578,24 @@ func (p *CPrinter) FormatFuncLit(ftype, body string) string {
 }
 
 func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {
+	switch {
+	case pname == "io" && sel == "ReadSeeker":
+		pname = "std"
+		sel = "istream"
+
+	case pname == "io" && sel == "SeekCurrent":
+		pname = "std::ios"
+		sel = "cur"
+
+	case pname == "io" && sel == "SeekStart":
+		pname = "std::ios"
+		sel = "beg"
+
+	case pname == "io" && sel == "SeekEnd":
+		pname = "std::ios"
+		sel = "end"
+	}
+
 	if isObject {
 		return fmt.Sprintf("%s%s", p.ctx.Selector(pname), sel)
 	} else {
@@ -608,7 +627,7 @@ func GuessType(value string) (string, string) {
 	case '\'':
 		return "char", value
 	case '"':
-		return "string", value
+		return "std::string", value
 
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.':
 		if strings.Contains(value, ".") || strings.Contains(value, "E") {
