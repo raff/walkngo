@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
+	"go/importer"
 	"go/parser"
 	"go/token"
+	"go/types"
 	"io"
 	"strings"
 
@@ -26,6 +28,8 @@ type GoWalker struct {
 	writer      io.Writer
 	debug       bool
 	sortStructs bool
+
+	info types.Info
 }
 
 func NewWalker(p printer.Printer, out io.Writer, debug bool) *GoWalker {
@@ -42,6 +46,9 @@ func (w *GoWalker) SetWriter(writer io.Writer) (old io.Writer) {
 }
 
 func (w *GoWalker) WalkFile(filename string) error {
+	w.p.Reset()
+	w.p.Print(fmt.Sprintf("//source: %s\n", filename))
+
 	fset := token.NewFileSet() // positions are relative to fset
 
 	f, err := parser.ParseFile(fset, filename, nil, 0)
@@ -49,8 +56,17 @@ func (w *GoWalker) WalkFile(filename string) error {
 		return err
 	}
 
-	w.p.Reset()
-	w.p.Print(fmt.Sprintf("//source: %s\n", filename))
+	w.info = types.Info{
+		Types: make(map[ast.Expr]types.TypeAndValue),
+		Defs:  make(map[*ast.Ident]types.Object),
+		Uses:  make(map[*ast.Ident]types.Object),
+	}
+
+	conf := types.Config{Importer: importer.Default()}
+	_, err = conf.Check(f.Name.String(), fset, []*ast.File{f}, &w.info)
+	if err != nil {
+		return err
+	}
 
 	ast.Walk(w, f)
 	return nil
@@ -86,7 +102,8 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 
 	case *ast.ValueSpec:
 		vtype := (pparent.(*ast.GenDecl)).Tok.String()
-		w.p.PrintValue(vtype, w.parseExpr(n.Type), w.parseNames(n.Names), w.parseExprList(n.Values), len(n.Names) > 1, len(n.Values) > 1)
+		typedef := w.parseExpr(n.Type)
+		w.p.PrintValue(vtype, typedef, w.parseNames(n.Names), w.parseExprList(n.Values), len(n.Names) > 1, len(n.Values) > 1)
 
 	case *ast.GenDecl:
 		w.p.Print("\n")
@@ -197,12 +214,13 @@ func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 		w.p.PrintEmpty()
 
 	default:
-		w.p.Print(fmt.Sprintf("/* Node: %#v */\n", n))
+		if !w.debug {
+			w.p.Print(fmt.Sprintf("/* Node: %#v */\n", n))
+		}
 		ret = w
 	}
 
 	w.Flush()
-
 	w.parent = pparent
 	return
 }
@@ -234,13 +252,13 @@ func (w *GoWalker) BufferVisit(node ast.Node) (ret string) {
 	return
 }
 
-func (w *GoWalker) parseExpr(expr interface{}) string {
+func (w *GoWalker) parseExpr(expr ast.Expr) string {
 	if expr == nil {
 		return ""
 	}
 
 	if w.debug {
-		w.p.Print(fmt.Sprintf("/* Expr: %#v */\n", expr))
+		w.p.Print(fmt.Sprintf("/* Expr: %#v - %v */\n", expr, w.info.Types[expr].Type))
 	}
 
 	switch expr := expr.(type) {

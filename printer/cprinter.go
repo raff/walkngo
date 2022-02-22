@@ -38,6 +38,8 @@ type CContext struct {
 	ret_definitions string // used to define return variables
 	ret_values      string // used to "fill" empty returns
 
+	fall_through bool // fall through next case in switch
+
 	next *CContext
 }
 
@@ -188,14 +190,14 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 	}
 
 	if ntuple && len(values) > 0 {
-		names = fmt.Sprintf("tie(%s)", names)
+		names = fmt.Sprintf("std::tie(%s)", names)
 	}
 
 	p.PrintLevel(NONE, vtype, typedef, names)
 
 	if len(values) > 0 {
 		if vtuple {
-			values = fmt.Sprintf("make_tuple(%s)", values)
+			values = fmt.Sprintf("std::make_tuple(%s)", values)
 		}
 
 		p.Print(" =", values)
@@ -204,15 +206,23 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 }
 
 func (p *CPrinter) PrintStmt(stmt, expr string) {
-	if stmt == "go" {
+	switch {
+	case stmt == "fallthrough":
+		p.ctx.fall_through = true
+		p.PrintLevel(SEMI, "// fallthrough")
+
+	case stmt == "go":
 		// start a goroutine (or a thread)
 		p.PrintLevel(SEMI, fmt.Sprintf("Goroutine([](){ %s; })", expr))
-	} else if stmt == "defer" {
+
+	case stmt == "defer":
 		p.PrintLevel(SEMI, fmt.Sprintf("Deferred defer%d([](){ %s; })", p.ctx.deferred, expr))
 		p.ctx.deferred++
-	} else if len(stmt) > 0 {
+
+	case len(stmt) > 0:
 		p.PrintLevel(SEMI, stmt, expr)
-	} else {
+
+	default:
 		p.PrintLevel(SEMI, expr)
 	}
 }
@@ -220,6 +230,7 @@ func (p *CPrinter) PrintStmt(stmt, expr string) {
 func (p *CPrinter) PrintReturn(expr string, tuple bool) {
 	if len(expr) == 0 && len(p.ctx.ret_values) > 0 {
 		expr = p.Chop(p.ctx.ret_values)
+		tuple = strings.Contains(expr, ", ")
 	}
 
 	if tuple {
@@ -302,6 +313,8 @@ func (p *CPrinter) PrintSwitch(init, expr string) {
 }
 
 func (p *CPrinter) PrintCase(expr string) {
+	p.ctx.fall_through = false
+
 	if len(expr) > 0 {
 		p.PrintLevel(COLON, "case", expr)
 	} else {
@@ -310,7 +323,9 @@ func (p *CPrinter) PrintCase(expr string) {
 }
 
 func (p *CPrinter) PrintEndCase() {
-	p.PrintLevel(SEMI, "break") // XXX: need to check for previous fallthrough
+	if !p.ctx.fall_through {
+		p.PrintLevel(SEMI, "break")
+	}
 }
 
 func (p *CPrinter) PrintIf(init, cond string) {
@@ -340,11 +355,11 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
 	}
 
 	if ltuple {
-		lhs = fmt.Sprintf("tie(%s)", lhs)
+		lhs = fmt.Sprintf("std::tie(%s)", lhs)
 	}
 
 	if rtuple {
-		rhs = fmt.Sprintf("make_tuple(%s)", rhs)
+		rhs = fmt.Sprintf("std::make_tuple(%s)", rhs)
 	}
 
 	p.PrintLevel(SEMI, lhs, op, rhs)
@@ -553,7 +568,7 @@ func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 	if isFuncLit {
 		return fmt.Sprintf("[](%s)->%s", args, fun)
 	} else if fun == "len" {
-		return fmt.Sprintf("%v->size()", args)
+		return fmt.Sprintf("%v.size()", args)
 
 		//} else if fun == "make" {
 		//	return FormatMake(args)
@@ -602,6 +617,10 @@ func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {
 	case pname == "fmt" && sel == "Sprintf":
 		pname = "std"
 		sel = "sprintf"
+
+	case pname == "strconv" && sel == "Itoa":
+		pname = "std"
+		sel = "to_string"
 	}
 
 	if isObject {
@@ -612,7 +631,10 @@ func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {
 }
 
 func (p *CPrinter) FormatTypeAssert(orig, assert string) string {
-	return fmt.Sprintf("%s.(%s)", orig, assert)
+	if assert == "type" {
+	}
+
+	return fmt.Sprintf("typeAssert<%v>(%v)", assert, orig)
 }
 
 //
@@ -662,6 +684,8 @@ func GuessType(value string) (string, string) {
 	// x = make(t) -> t x()
 	//
 	if strings.HasPrefix(value, "make(") {
+		i := strings.IndexAny(value, ",)")
+		return value[5:i], value
 	}
 
 	//
@@ -678,10 +702,19 @@ func GuessType(value string) (string, string) {
 	// an array
 	//
 	i := strings.IndexAny(value, "[({") // use this instead of s.Contains("[") to catch f(x[])
-	if i >= 0 && value[i] == '[' {
-		// should be an array
-		if p, ok := findMatch(value, '['); ok {
-			return value[:p+1], value
+	if i >= 0 {
+		switch value[i] {
+		case '[':
+			// should be an array
+			if p, ok := findMatch(value, '['); ok {
+				t, _ := GuessType(value[i+1 : p])
+				return t, value
+			}
+
+		case '{':
+			// should be struct
+			return value[:i], value
+
 		}
 	}
 
