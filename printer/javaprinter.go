@@ -245,6 +245,7 @@ func (p *JavaPrinter) PrintValue(vtype, typedef, names, values string, ntuple, v
 func (p *JavaPrinter) PrintStmt(stmt, expr string) {
 	if stmt == "fallthrough" {
 		p.ctx.fall_through = true
+		p.PrintLevel(SEMI, "// fallthrough")
 		return
 	}
 
