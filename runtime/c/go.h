@@ -63,6 +63,12 @@ public:
     }
 };
 
+template<typename Base, typename T>
+inline std::tuple<const Base*, bool> typeAssert(const T *ptr) {
+    const Base* t = dynamic_cast<const Base*>(ptr);
+    return std::make_tuple(t, t != nullptr);
+}
+
 template<class T> class Chan {
 private:
     std::queue<T> buffer;
