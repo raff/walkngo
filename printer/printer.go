@@ -126,7 +126,7 @@ type Printer interface {
 
 	////////////////////////////////////
 
-	FormatIdent(id string) string
+	FormatIdent(id, itype string) string
 
 	FormatLiteral(lit string) string
 

@@ -196,7 +196,7 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 	if vtype == "var" {
 		vtype = ""
 	} else if vtype == "const" && len(values) == 0 {
-		values = p.FormatIdent(IOTA)
+		values = p.FormatIdent(IOTA, "")
 	}
 
 	if len(typedef) == 0 {
@@ -403,7 +403,7 @@ func (p *CPrinter) PrintSend(ch, value string) {
 	p.PrintLevel(SEMI, fmt.Sprintf("%s.Send(%s)", ch, value))
 }
 
-func (p *CPrinter) FormatIdent(id string) (ret string) {
+func (p *CPrinter) FormatIdent(id, itype string) (ret string) {
 	switch id {
 	case NIL:
 		return NULL

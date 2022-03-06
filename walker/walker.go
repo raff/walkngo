@@ -258,6 +258,10 @@ func (w *GoWalker) parseExpr(expr ast.Expr) string {
 	}
 
 	etype := w.info.Types[expr].Type
+	stype := ""
+	if etype != nil {
+		stype = etype.String()
+	}
 
 	if w.debug {
 		w.p.Print(fmt.Sprintf("/* Expr: %#v - %v */\n", expr, etype))
@@ -270,7 +274,7 @@ func (w *GoWalker) parseExpr(expr ast.Expr) string {
 		if expr == nil {
 			return ""
 		}
-		return w.p.FormatIdent(expr.Name)
+		return w.p.FormatIdent(expr.Name, stype)
 
 		// *thing
 	case *ast.StarExpr:

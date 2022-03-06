@@ -217,7 +217,7 @@ func (p *GoPrinter) PrintSend(ch, value string) {
 	p.PrintLevel(SEMI, ch, "<-", value)
 }
 
-func (p *GoPrinter) FormatIdent(id string) string {
+func (p *GoPrinter) FormatIdent(id, itype string) string {
 	return id
 }
 

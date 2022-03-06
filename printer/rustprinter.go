@@ -245,7 +245,7 @@ func (p *RustPrinter) PrintSend(ch, value string) {
 	p.PrintLevel(SEMI, ch, "<-", value)
 }
 
-func (p *RustPrinter) FormatIdent(id string) string {
+func (p *RustPrinter) FormatIdent(id, itype string) string {
 	return id
 }
 

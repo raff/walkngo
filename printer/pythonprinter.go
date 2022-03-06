@@ -245,7 +245,7 @@ func (p *PythonPrinter) PrintSend(ch, value string) {
 	p.PrintLevel(SEMI, ch, "<-", value)
 }
 
-func (p *PythonPrinter) FormatIdent(id string) string {
+func (p *PythonPrinter) FormatIdent(id, itype string) string {
 	switch id {
 	case "nil":
 		return "None"

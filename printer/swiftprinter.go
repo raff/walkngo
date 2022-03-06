@@ -225,7 +225,7 @@ func (p *SwiftPrinter) PrintSend(ch, value string) {
 	p.PrintLevel(SEMI, ch, "<-", value)
 }
 
-func (p *SwiftPrinter) FormatIdent(id string) (ret string) {
+func (p *SwiftPrinter) FormatIdent(id, itype string) (ret string) {
 	switch id {
 	//ase IOTA:
 	//ret = strconv.Itoa(p.ctx.iota)

@@ -367,7 +367,7 @@ func (p *JavaPrinter) PrintSend(ch, value string) {
 	p.PrintLevel(SEMI, ch, "<-", value)
 }
 
-func (p *JavaPrinter) FormatIdent(id string) string {
+func (p *JavaPrinter) FormatIdent(id, itype string) string {
 	if id == "nil" {
 		return "null"
 	}

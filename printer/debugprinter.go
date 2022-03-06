@@ -149,9 +149,9 @@ func (d *DebugPrinter) PrintSend(ch, value string) {
 	d.P.PrintSend(ch, value)
 }
 
-func (d *DebugPrinter) FormatIdent(id string) string {
-	fmt.Println("/* FormatIdent", id, "*/")
-	return d.P.FormatIdent(id)
+func (d *DebugPrinter) FormatIdent(id, itype string) string {
+	fmt.Println("/* FormatIdent", id, itype, "*/")
+	return d.P.FormatIdent(id, itype)
 }
 
 func (d *DebugPrinter) FormatLiteral(lit string) string {
