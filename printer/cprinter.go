@@ -30,7 +30,9 @@ type CPrinter struct {
 // CContext is the context for a (function) block
 //
 type CContext struct {
-	iota int // incremented when 'const n = iota' or 'const n'
+	context ContextType
+
+	iota_count int // incremented when 'const n = iota' or 'const n'
 
 	deferred int // used to generate unique names for "defer" callbacks
 
@@ -39,6 +41,8 @@ type CContext struct {
 	ret_values      string // used to "fill" empty returns
 
 	fall_through bool // fall through next case in switch
+
+	caseType string // the object of a switch type assertion
 
 	next *CContext
 }
@@ -59,7 +63,21 @@ func (p *CPrinter) Reset() {
 }
 
 func (p *CPrinter) PushContext(c ContextType) {
-	p.ctx = &CContext{next: p.ctx}
+	if p.ctx == nil {
+		p.ctx = &CContext{context: c}
+		return
+	}
+
+	p.ctx = &CContext{
+		context:         c,
+		iota_count:      p.ctx.iota_count,
+		deferred:        p.ctx.deferred,
+		receiver:        p.ctx.receiver,
+		ret_definitions: p.ctx.ret_definitions,
+		ret_values:      p.ctx.ret_values,
+		fall_through:    p.ctx.fall_through,
+		next:            p.ctx,
+	}
 }
 
 func (p *CPrinter) PopContext() {
@@ -315,6 +333,17 @@ func (p *CPrinter) PrintSwitch(init, expr string) {
 func (p *CPrinter) PrintCase(expr string) {
 	p.ctx.fall_through = false
 
+	if p.ctx.caseType != "" {
+		if len(expr) > 0 {
+			p.PrintLevel(NL,
+				fmt.Sprintf("std::tie(v, ok) = typeAssert<%v>(%v); if (ok) {", p.ctx.caseType, expr))
+		} else {
+			p.PrintLevel(NL, "} else {")
+		}
+
+		return
+	}
+
 	if len(expr) > 0 {
 		p.PrintLevel(COLON, "case", expr)
 	} else {
@@ -323,6 +352,11 @@ func (p *CPrinter) PrintCase(expr string) {
 }
 
 func (p *CPrinter) PrintEndCase() {
+	if p.ctx.caseType != "" {
+		p.PrintLevel(NONE, "}")
+		return
+	}
+
 	if !p.ctx.fall_through {
 		p.PrintLevel(SEMI, "break")
 	}
@@ -375,8 +409,8 @@ func (p *CPrinter) FormatIdent(id string) (ret string) {
 		return NULL
 
 	case IOTA:
-		ret = strconv.Itoa(p.ctx.iota)
-		p.ctx.iota += 1
+		ret = strconv.Itoa(p.ctx.iota_count)
+		p.ctx.iota_count += 1
 
 	case "string":
 		ret = "std::string"
@@ -502,7 +536,11 @@ func (p *CPrinter) FormatArray(alen, elt string) string {
 	}
 }
 
-func (p *CPrinter) FormatArrayIndex(array, index string) string {
+func (p *CPrinter) FormatArrayIndex(array, index, rtype string) string {
+	return fmt.Sprintf("%s[%s]", array, index)
+}
+
+func (p *CPrinter) FormatMapIndex(array, index, rtype string, check bool) string {
 	return fmt.Sprintf("%s[%s]", array, index)
 }
 
@@ -632,6 +670,8 @@ func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {
 
 func (p *CPrinter) FormatTypeAssert(orig, assert string) string {
 	if assert == "type" {
+		p.ctx.caseType = orig
+		return ""
 	}
 
 	return fmt.Sprintf("typeAssert<%v>(%v)", assert, orig)

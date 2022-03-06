@@ -58,8 +58,8 @@ func (w *GoWalker) WalkFile(filename string) error {
 
 	w.info = types.Info{
 		Types: make(map[ast.Expr]types.TypeAndValue),
-		Defs:  make(map[*ast.Ident]types.Object),
-		Uses:  make(map[*ast.Ident]types.Object),
+		//Defs:  make(map[*ast.Ident]types.Object),
+		//Uses:  make(map[*ast.Ident]types.Object),
 	}
 
 	conf := types.Config{Importer: importer.Default()}
@@ -257,8 +257,10 @@ func (w *GoWalker) parseExpr(expr ast.Expr) string {
 		return ""
 	}
 
+	etype := w.info.Types[expr].Type
+
 	if w.debug {
-		w.p.Print(fmt.Sprintf("/* Expr: %#v - %v */\n", expr, w.info.Types[expr].Type))
+		w.p.Print(fmt.Sprintf("/* Expr: %#v - %v */\n", expr, etype))
 	}
 
 	switch expr := expr.(type) {
@@ -346,8 +348,20 @@ func (w *GoWalker) parseExpr(expr ast.Expr) string {
 		return w.p.FormatBinary(w.parseExpr(expr.X), expr.Op.String(), w.parseExpr(expr.Y))
 
 		// array[index]
+		// map[key]
 	case *ast.IndexExpr:
-		return w.p.FormatArrayIndex(w.parseExpr(expr.X), w.parseExpr(expr.Index))
+		xtype := w.info.Types[expr.X].Type
+		if _, ok := xtype.Underlying().(*types.Map); ok {
+			check := false
+
+			if t, ok := etype.Underlying().(*types.Tuple); ok {
+				etype = t.At(0).Type()
+				check = true
+			}
+			return w.p.FormatMapIndex(w.parseExpr(expr.X), w.parseExpr(expr.Index), etype.String(), check)
+		} else {
+			return w.p.FormatArrayIndex(w.parseExpr(expr.X), w.parseExpr(expr.Index), etype.String())
+		}
 
 		// key: value
 	case *ast.KeyValueExpr:

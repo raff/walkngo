@@ -23,10 +23,14 @@ type Walker struct {
 	ext    string
 }
 
+func fatal(err error) {
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
+}
+
 func (w Walker) Walk(path string, info os.FileInfo, err error) error {
 	if err != nil {
-		fmt.Println(err)
-		return nil
+		fatal(err)
 	}
 
 	var outpath string
@@ -42,7 +46,7 @@ func (w Walker) Walk(path string, info os.FileInfo, err error) error {
 
 		if len(outpath) > 0 {
 			if err := os.MkdirAll(outpath, 0755); err != nil {
-				fmt.Println(err)
+				fatal(err)
 			}
 		}
 	} else if strings.HasSuffix(path, ".go") {
@@ -50,7 +54,7 @@ func (w Walker) Walk(path string, info os.FileInfo, err error) error {
 			outpath = outpath[:len(outpath)-2] + w.ext
 			f, err := os.Create(outpath)
 			if err != nil {
-				fmt.Println(err)
+				fatal(err)
 			} else {
 				w.SetWriter(f)
 				defer f.Close()
@@ -58,7 +62,7 @@ func (w Walker) Walk(path string, info os.FileInfo, err error) error {
 		}
 
 		if err := w.WalkFile(path); err != nil {
-			fmt.Println(err)
+			fatal(err)
 		}
 	}
 

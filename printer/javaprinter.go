@@ -23,7 +23,9 @@ type JavaPrinter struct {
 // Jcontext is the context for a (function) block
 //
 type Jcontext struct {
-	iota int // incremented when 'const n = iota' or 'const n'
+	context ContextType
+
+	iota_count int // incremented when 'const n = iota' or 'const n'
 
 	deferred int // used to generate unique names for "defer" callbacks
 
@@ -34,8 +36,7 @@ type Jcontext struct {
 	fall_through bool // fall through next case in switch
 	case_break   bool // got case break
 
-	ctype ContextType
-	next  *Jcontext
+	next *Jcontext
 }
 
 func (ctx *Jcontext) Selector(s string) string {
@@ -48,7 +49,7 @@ func (ctx *Jcontext) Selector(s string) string {
 
 func (ctx *Jcontext) findContextType(c ContextType) bool {
 	for ; ctx != nil; ctx = ctx.next {
-		if ctx.ctype == c {
+		if ctx.context == c {
 			return true
 		}
 	}
@@ -57,7 +58,7 @@ func (ctx *Jcontext) findContextType(c ContextType) bool {
 }
 
 func (ctx *Jcontext) mod(name string, funcdef bool) string {
-	// fmt.Println("MOD", ctx.ctype, name)
+	// fmt.Println("MOD", ctx.context, name)
 
 	if (funcdef && ctx.next == nil) || !ctx.findContextType(FUNCONTEXT) {
 		if IsPublic(name) {
@@ -125,7 +126,7 @@ func (p *JavaPrinter) Reset() {
 }
 
 func (p *JavaPrinter) PushContext(c ContextType) {
-	p.ctx = &Jcontext{ctype: c, next: p.ctx}
+	p.ctx = &Jcontext{context: c, next: p.ctx}
 }
 
 func (p *JavaPrinter) PopContext() {
@@ -433,7 +434,11 @@ func (p *JavaPrinter) FormatArray(len, elt string) string {
 	return fmt.Sprintf("%s[%s]", elt, len)
 }
 
-func (p *JavaPrinter) FormatArrayIndex(array, index string) string {
+func (p *JavaPrinter) FormatArrayIndex(array, index, ctype string) string {
+	return fmt.Sprintf("%s[%s]", array, index)
+}
+
+func (p *JavaPrinter) FormatMapIndex(array, index, ctype string, check bool) string {
 	return fmt.Sprintf("%s[%s]", array, index)
 }
 

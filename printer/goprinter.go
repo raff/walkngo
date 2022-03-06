@@ -264,7 +264,11 @@ func (p *GoPrinter) FormatArray(len, elt string) string {
 	return fmt.Sprintf("[%s]%s", len, elt)
 }
 
-func (p *GoPrinter) FormatArrayIndex(array, index string) string {
+func (p *GoPrinter) FormatArrayIndex(array, index, ctype string) string {
+	return fmt.Sprintf("%s[%s]", array, index)
+}
+
+func (p *GoPrinter) FormatMapIndex(array, index, ctype string, check bool) string {
 	return fmt.Sprintf("%s[%s]", array, index)
 }
 

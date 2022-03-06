@@ -199,9 +199,14 @@ func (d *DebugPrinter) FormatArray(len, elt string) string {
 	return d.P.FormatArray(len, elt)
 }
 
-func (d *DebugPrinter) FormatArrayIndex(array, index string) string {
-	fmt.Println("/* FormatArrayIndex", array, index, "*/")
-	return d.P.FormatArrayIndex(array, index)
+func (d *DebugPrinter) FormatArrayIndex(array, index, ctype string) string {
+	fmt.Println("/* FormatArrayIndex", array, index, ctype, "*/")
+	return d.P.FormatArrayIndex(array, index, ctype)
+}
+
+func (d *DebugPrinter) FormatMapIndex(array, index, ctype string, check bool) string {
+	fmt.Println("/* FormatMapIndex", array, index, ctype, check, "*/")
+	return d.P.FormatMapIndex(array, index, ctype, check)
 }
 
 func (d *DebugPrinter) FormatSlice(slice, low, high, max string) string {

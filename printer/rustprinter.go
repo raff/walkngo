@@ -294,7 +294,11 @@ func (p *RustPrinter) FormatArray(len, elt string) string {
 	return fmt.Sprintf("[%s]%s", len, elt)
 }
 
-func (p *RustPrinter) FormatArrayIndex(array, index string) string {
+func (p *RustPrinter) FormatArrayIndex(array, index, ctype string) string {
+	return fmt.Sprintf("%s[%s]", array, index)
+}
+
+func (p *RustPrinter) FormatMapIndex(array, index, ctype string, check bool) string {
 	return fmt.Sprintf("%s[%s]", array, index)
 }
 

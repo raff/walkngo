@@ -43,7 +43,8 @@ const (
 	COMMA   = ", "
 	COMMANL = ",\n"
 
-	GENCONTEXT ContextType = iota
+	DEFAULTCONTEXT ContextType = iota
+	GENCONTEXT
 	FUNCONTEXT
 	SWITCHCONTEXT
 	TYPESWITCHCONTEXT
@@ -145,7 +146,9 @@ type Printer interface {
 
 	FormatArray(len, elt string) string
 
-	FormatArrayIndex(array, index string) string
+	FormatArrayIndex(array, index, rtype string) string
+
+	FormatMapIndex(array, index, rtype string, check bool) string
 
 	FormatSlice(slice, low, high, max string) string
 

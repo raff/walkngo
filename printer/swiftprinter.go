@@ -320,7 +320,11 @@ func (p *SwiftPrinter) FormatArray(l, elt string) string {
 	}
 }
 
-func (p *SwiftPrinter) FormatArrayIndex(array, index string) string {
+func (p *SwiftPrinter) FormatArrayIndex(array, index, ctype string) string {
+	return fmt.Sprintf("%s[%s]", array, index)
+}
+
+func (p *SwiftPrinter) FormatMapIndex(array, index, ctype string, check bool) string {
 	return fmt.Sprintf("%s[%s]", array, index)
 }
 

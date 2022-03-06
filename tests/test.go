@@ -35,6 +35,9 @@ func testTypeSwitch(t interface{}) string {
 
     case int, int8, int16, int32, int64:
         return fmt.Sprintf("%d", v)
+
+    default:
+        return "invalid type"
     }
 
     return ""
@@ -51,4 +54,12 @@ func main() {
     if i := a[22]; i < 10 {
         ch <- m["x"]
     }
+
+    v, ok := m["a"]
+
+    v = a[22]
+
+    v = m["a"]
+
+    _, _ = v, ok
 }

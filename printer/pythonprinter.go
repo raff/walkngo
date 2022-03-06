@@ -319,7 +319,11 @@ func (p *PythonPrinter) FormatArray(len, elt string) string {
 	return fmt.Sprintf("[%s]%s", len, elt)
 }
 
-func (p *PythonPrinter) FormatArrayIndex(array, index string) string {
+func (p *PythonPrinter) FormatArrayIndex(array, index, ctype string) string {
+	return fmt.Sprintf("%s[%s]", array, index)
+}
+
+func (p *PythonPrinter) FormatMapIndex(array, index, ctype string, check bool) string {
 	return fmt.Sprintf("%s[%s]", array, index)
 }
 
