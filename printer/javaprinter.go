@@ -6,9 +6,7 @@ import (
 	"strings"
 )
 
-//
 // JavaPrinter implement the Printer interface for Java programs
-//
 type JavaPrinter struct {
 	Printer
 
@@ -19,9 +17,7 @@ type JavaPrinter struct {
 	ctx *Jcontext
 }
 
-//
 // Jcontext is the context for a (function) block
-//
 type Jcontext struct {
 	context ContextType
 

@@ -6,9 +6,7 @@ import (
 	"strings"
 )
 
-//
 // RustPrinter implement the Printer interface for Rust programs
-//
 type RustPrinter struct {
 	Printer
 

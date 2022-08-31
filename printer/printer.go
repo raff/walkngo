@@ -50,9 +50,7 @@ const (
 	TYPESWITCHCONTEXT
 )
 
-//
 // Printer is the interface to be implemented to print a program
-//
 type Printer interface {
 	Reset()
 
@@ -173,14 +171,10 @@ type Printer interface {
 	FormatTypeAssert(orig, assert string) string
 }
 
-//
 // Pair contains a pair of values (name/value, name/type, etc.)
-//
 type Pair [2]string
 
-//
 // PairList is a list/slice of pair
-//
 type PairList []Pair
 
 // Returns the "name" part of a pair
@@ -193,28 +187,26 @@ func (p Pair) Value() string {
 	return p[1]
 }
 
-//
 // Default format for a Pair ("name" SP "value")
-//
 func (p Pair) String() string {
-	if len(p.Name()) > 0 && len(p.Value()) > 0 {
-		return p.Name() + " " + p.Value()
-	} else {
-		return p.Name() + p.Value()
+	if len(p.Name()) > 0 {
+		if len(p.Value()) > 0 {
+			return p.Name() + " " + p.Value()
+		}
+
+		return p.Name()
 	}
+
+	return p.Value()
 }
 
-//
 // Is this name public
-//
 func IsPublic(name string) bool {
 	first, _ := utf8.DecodeRuneInString(name)
 	return unicode.IsUpper(first)
 }
 
-//
 // IfTrue returns the input value if the condition is true, an empty string otherwise
-//
 func IfTrue(val string, cond bool) (ret string) {
 	if cond {
 		return val

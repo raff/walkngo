@@ -6,9 +6,7 @@ import (
 	"strings"
 )
 
-//
 // SwiftPrinter implement the Printer interface for Swift programs
-//
 type SwiftPrinter struct {
 	Printer
 

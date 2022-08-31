@@ -16,9 +16,7 @@ import (
 	"github.com/raff/walkngo/printer"
 )
 
-//
 // GoWalker is the context for the AST visitor
-//
 type GoWalker struct {
 	p           printer.Printer
 	parent      ast.Node
@@ -72,9 +70,7 @@ func (w *GoWalker) WalkFile(filename string) error {
 	return nil
 }
 
-//
 // Implement the Visitor interface for GoWalker
-//
 func (w *GoWalker) Visit(node ast.Node) (ret ast.Visitor) {
 	if node == nil {
 		return

@@ -5,9 +5,7 @@ import (
 	"io"
 )
 
-//
 // DebugPrinter wraps a Printer with debug messages
-//
 type DebugPrinter struct {
 	P Printer
 }

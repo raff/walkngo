@@ -6,9 +6,7 @@ import (
 	"strings"
 )
 
-//
 // GoPrinter implement the Printer interface for Go programs
-//
 type GoPrinter struct {
 	Printer
 

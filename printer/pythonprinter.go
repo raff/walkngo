@@ -6,9 +6,7 @@ import (
 	"strings"
 )
 
-//
 // PythonPrinter implement the Printer interface for Python programs
-//
 type PythonPrinter struct {
 	Printer
 

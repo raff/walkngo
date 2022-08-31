@@ -13,9 +13,7 @@ const (
 	IOTA = "iota"
 )
 
-//
 // C implement the Printer interface for C programs
-//
 type CPrinter struct {
 	Printer
 
@@ -26,9 +24,7 @@ type CPrinter struct {
 	ctx *CContext
 }
 
-//
 // CContext is the context for a (function) block
-//
 type CContext struct {
 	context ContextType
 
@@ -677,9 +673,7 @@ func (p *CPrinter) FormatTypeAssert(orig, assert string) string {
 	return fmt.Sprintf("typeAssert<%v>(%v)", assert, orig)
 }
 
-//
 // Guess type and return type and new value
-//
 func GuessType(value string) (string, string) {
 	vtype := "auto"
 
@@ -799,7 +793,6 @@ func FormatMake(args string) string {
 	}
 }
 
-//
 // findMatch finds the matching closing character given the opening character.
 // used to find matching braces or parenthesis with support for nesting.
 // NOTE: this version does NOT not check if the closing character is inside quotes.
