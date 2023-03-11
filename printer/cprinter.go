@@ -414,6 +414,18 @@ func (p *CPrinter) FormatIdent(id, itype string) (ret string) {
 	case "_":
 		ret = "std::ignore"
 
+	case "float64":
+		ret = "double"
+
+	case "float32":
+		ret = "float"
+
+	case "int64":
+		return "long long"
+
+	case "int32":
+		return "int"
+
 	default:
 		ret = id
 	}
@@ -695,7 +707,7 @@ func GuessType(value string) (string, string) {
 
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.':
 		if strings.Contains(value, ".") || strings.Contains(value, "E") {
-			return "float64", value
+			return "double", value
 		}
 		return "int", value
 	}
