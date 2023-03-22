@@ -231,6 +231,14 @@ func (p *RustPrinter) PrintEmpty() {
 }
 
 func (p *RustPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
+	if ltuple {
+		lhs = "(" + lhs + ")"
+	}
+
+	if rtuple {
+		rhs = "(" + rhs + ")"
+	}
+
 	if op == ":=" {
 		lhs = "let " + lhs
 		op = "="
@@ -244,6 +252,38 @@ func (p *RustPrinter) PrintSend(ch, value string) {
 }
 
 func (p *RustPrinter) FormatIdent(id, itype string) string {
+	switch id {
+	case "int8":
+		return "i8"
+
+	case "int16":
+		return "i16"
+
+	case "int32", "int":
+		return "i32"
+
+	case "int64":
+		return "i64"
+
+	case "uint8":
+		return "u8"
+
+	case "uint16":
+		return "u16"
+
+	case "uint32", "uint":
+		return "u32"
+
+	case "uint64":
+		return "u64"
+
+	case "float32":
+		return "f32"
+
+	case "float64":
+		return "f64"
+	}
+
 	return id
 }
 
