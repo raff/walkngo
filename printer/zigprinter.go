@@ -8,22 +8,22 @@ import (
 )
 
 const (
-	NULLP = "nullptr"
+	NULL = "null"
 )
 
-// C implement the Printer interface for C programs
-type CPrinter struct {
+// ZigPrinter implement the Printer interface for Zig programs
+type ZigPrinter struct {
 	Printer
 
 	level    int
 	sameline bool
 	w        io.Writer
 
-	ctx *CContext
+	ctx *ZigContext
 }
 
-// CContext is the context for a (function) block
-type CContext struct {
+// ZigContext is the context for a (function) block
+type ZigContext struct {
 	context ContextType
 
 	iota_count int // incremented when 'const n = iota' or 'const n'
@@ -38,31 +38,31 @@ type CContext struct {
 
 	caseType string // the object of a switch type assertion
 
-	next *CContext
+	next *ZigContext
 }
 
-func (ctx *CContext) Selector(s string) string {
+func (ctx *ZigContext) Selector(s string) string {
 	if ctx != nil && ctx.receiver == s {
-		return "this->"
+		s = "self"
 	}
 
 	return fmt.Sprintf("%s.", s)
 }
 
-func (p *CPrinter) Reset() {
+func (p *ZigPrinter) Reset() {
 	p.level = 0
 	p.sameline = false
 
 	p.ctx = nil
 }
 
-func (p *CPrinter) PushContext(c ContextType) {
+func (p *ZigPrinter) PushContext(c ContextType) {
 	if p.ctx == nil {
-		p.ctx = &CContext{context: c}
+		p.ctx = &ZigContext{context: c}
 		return
 	}
 
-	p.ctx = &CContext{
+	p.ctx = &ZigContext{
 		context:         c,
 		iota_count:      p.ctx.iota_count,
 		deferred:        p.ctx.deferred,
@@ -74,31 +74,31 @@ func (p *CPrinter) PushContext(c ContextType) {
 	}
 }
 
-func (p *CPrinter) PopContext() {
+func (p *ZigPrinter) PopContext() {
 	p.ctx = p.ctx.next
 }
 
-func (p *CPrinter) SetWriter(w io.Writer) {
+func (p *ZigPrinter) SetWriter(w io.Writer) {
 	p.w = w
 }
 
-func (p *CPrinter) UpdateLevel(delta int) {
+func (p *ZigPrinter) UpdateLevel(delta int) {
 	p.level += delta
 }
 
-func (p *CPrinter) SameLine() {
+func (p *ZigPrinter) SameLine() {
 	p.sameline = true
 }
 
-func (p *CPrinter) IsSameLine() bool {
+func (p *ZigPrinter) IsSameLine() bool {
 	return p.sameline
 }
 
-func (p *CPrinter) Chop(line string) string {
+func (p *ZigPrinter) Chop(line string) string {
 	return strings.TrimRight(line, COMMA)
 }
 
-func (p *CPrinter) indent() string {
+func (p *ZigPrinter) indent() string {
 	if p.sameline {
 		p.sameline = false
 		return ""
@@ -107,21 +107,21 @@ func (p *CPrinter) indent() string {
 	return strings.Repeat("  ", p.level)
 }
 
-func (p *CPrinter) Print(values ...string) {
+func (p *ZigPrinter) Print(values ...string) {
 	fmt.Fprint(p.w, strings.Join(values, " "))
 }
 
-func (p *CPrinter) PrintLevel(term string, values ...string) {
+func (p *ZigPrinter) PrintLevel(term string, values ...string) {
 	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "), term)
 }
 
-func (p *CPrinter) PrintLevelIn(term string, values ...string) {
+func (p *ZigPrinter) PrintLevelIn(term string, values ...string) {
 	p.level -= 1
 	fmt.Fprint(p.w, p.indent(), strings.Join(values, " "), term)
 	p.level += 1
 }
 
-func (p *CPrinter) PrintBlockStart(b BlockType, empty bool) {
+func (p *ZigPrinter) PrintBlockStart(b BlockType, empty bool) {
 	var open string
 
 	switch b {
@@ -140,7 +140,7 @@ func (p *CPrinter) PrintBlockStart(b BlockType, empty bool) {
 	}
 }
 
-func (p *CPrinter) PrintBlockEnd(b BlockType) {
+func (p *ZigPrinter) PrintBlockEnd(b BlockType) {
 	var close string
 
 	switch b {
@@ -154,12 +154,11 @@ func (p *CPrinter) PrintBlockEnd(b BlockType) {
 	p.PrintLevel(NONE, close)
 }
 
-func (p *CPrinter) PrintPackage(name string) {
+func (p *ZigPrinter) PrintPackage(name string) {
 	p.PrintLevel(NL, "//package", name)
-	p.PrintLevel(NL, "#include <go.h>")
 }
 
-func (p *CPrinter) PrintImport(name, path string) {
+func (p *ZigPrinter) PrintImport(name, path string) {
 	p.PrintLevel(NL, "//import", name, path)
 
 	switch path {
@@ -177,7 +176,7 @@ func (p *CPrinter) PrintImport(name, path string) {
 	}
 }
 
-func (p *CPrinter) PrintType(name, typedef string) {
+func (p *ZigPrinter) PrintType(name, typedef string) {
 	if strings.Contains(typedef, "%") {
 		// FuncType
 		p.PrintLevel(SEMI, "typedef", fmt.Sprintf(typedef, "("+name+")"))
@@ -186,15 +185,13 @@ func (p *CPrinter) PrintType(name, typedef string) {
 	}
 }
 
-func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtuple bool) {
-	if vtype == "var" {
-		vtype = ""
-	} else if vtype == "const" && len(values) == 0 {
+func (p *ZigPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtuple bool) {
+	if vtype == "const" && len(values) == 0 {
 		values = p.FormatIdent(IOTA, "")
 	}
 
-	if len(typedef) == 0 {
-		typedef, values = cGuessType(values)
+	if typedef == "" {
+		typedef, values = zGuessType(values)
 	} else if strings.Contains(typedef, "[") {
 		i := strings.Index(typedef, "[")
 		names += typedef[i:]
@@ -205,7 +202,11 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 		names = fmt.Sprintf("std::tie(%s)", names)
 	}
 
-	p.PrintLevel(NONE, vtype, typedef, names)
+	if typedef == "" {
+		p.PrintLevel(NONE, vtype, names)
+	} else {
+		p.PrintLevel(NONE, vtype, names, ":", typedef)
+	}
 
 	if len(values) > 0 {
 		if vtuple {
@@ -217,7 +218,7 @@ func (p *CPrinter) PrintValue(vtype, typedef, names, values string, ntuple, vtup
 	p.Print(";\n")
 }
 
-func (p *CPrinter) PrintStmt(stmt, expr string) {
+func (p *ZigPrinter) PrintStmt(stmt, expr string) {
 	switch {
 	case stmt == "fallthrough":
 		p.ctx.fall_through = true
@@ -239,7 +240,7 @@ func (p *CPrinter) PrintStmt(stmt, expr string) {
 	}
 }
 
-func (p *CPrinter) PrintReturn(expr string, tuple bool) {
+func (p *ZigPrinter) PrintReturn(expr string, tuple bool) {
 	if len(expr) == 0 && len(p.ctx.ret_values) > 0 {
 		expr = p.Chop(p.ctx.ret_values)
 		tuple = strings.Contains(expr, ", ")
@@ -252,11 +253,10 @@ func (p *CPrinter) PrintReturn(expr string, tuple bool) {
 	p.PrintStmt("return", expr)
 }
 
-func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
+func (p *ZigPrinter) PrintFunc(receiver, name, params, results string) {
 	if len(receiver) == 0 && len(params) == 0 && len(results) == 0 && name == "main" {
 		// the "main"
-		results = "int"
-		params = "int argc, char **argv"
+		results = "anyerror!void"
 	} else {
 		if len(results) == 0 {
 			results = "void"
@@ -272,10 +272,10 @@ func (p *CPrinter) PrintFunc(receiver, name, params, results string) {
 		}
 	}
 
-	fmt.Fprintf(p.w, "%s %s%s(%s) ", results, receiver, name, params)
+	fmt.Fprintf(p.w, "fn %s%s(%s) %s", receiver, name, params, results)
 }
 
-func (p *CPrinter) PrintFor(init, cond, post string) {
+func (p *ZigPrinter) PrintFor(init, cond, post string) {
 	init = strings.TrimRight(init, SEMI)
 	post = strings.TrimRight(post, SEMI)
 
@@ -302,7 +302,7 @@ func (p *CPrinter) PrintFor(init, cond, post string) {
 	p.Print(") ")
 }
 
-func (p *CPrinter) PrintRange(key, value, expr string) {
+func (p *ZigPrinter) PrintRange(key, value, expr string) {
 	// for maps a std::pair is returned where key is p.first and value is p.second
 	if key == "_" {
 		key, value = value, ""
@@ -317,14 +317,14 @@ func (p *CPrinter) PrintRange(key, value, expr string) {
 	p.Print(":", expr, ") ")
 }
 
-func (p *CPrinter) PrintSwitch(init, expr string) {
+func (p *ZigPrinter) PrintSwitch(init, expr string) {
 	if len(init) > 0 {
 		p.PrintLevel(SEMI, init)
 	}
 	p.PrintLevel(NONE, "switch (", expr, ")")
 }
 
-func (p *CPrinter) PrintCase(expr string) {
+func (p *ZigPrinter) PrintCase(expr string) {
 	p.ctx.fall_through = false
 
 	if p.ctx.caseType != "" {
@@ -345,7 +345,7 @@ func (p *CPrinter) PrintCase(expr string) {
 	}
 }
 
-func (p *CPrinter) PrintEndCase() {
+func (p *ZigPrinter) PrintEndCase() {
 	if p.ctx.caseType != "" {
 		p.PrintLevel(NONE, "}")
 		return
@@ -356,7 +356,7 @@ func (p *CPrinter) PrintEndCase() {
 	}
 }
 
-func (p *CPrinter) PrintIf(init, cond string) {
+func (p *ZigPrinter) PrintIf(init, cond string) {
 	if len(init) > 0 {
 		p.PrintLevel(NONE, init+" if ")
 	} else {
@@ -365,18 +365,18 @@ func (p *CPrinter) PrintIf(init, cond string) {
 	p.Print("(", cond, ") ")
 }
 
-func (p *CPrinter) PrintElse() {
+func (p *ZigPrinter) PrintElse() {
 	p.Print(" else ")
 }
 
-func (p *CPrinter) PrintEmpty() {
+func (p *ZigPrinter) PrintEmpty() {
 	p.PrintLevel(SEMI, "")
 }
 
-func (p *CPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
+func (p *ZigPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
 	if op == ":=" {
 		// := means there are new variables to be declared (but of course I don't know the real type)
-		rtype, rvalue := cGuessType(rhs)
+		rtype, rvalue := zGuessType(rhs)
 		lhs = rtype + " " + lhs
 		rhs = rvalue
 		op = "="
@@ -393,45 +393,63 @@ func (p *CPrinter) PrintAssignment(lhs, op, rhs string, ltuple, rtuple bool) {
 	p.PrintLevel(SEMI, lhs, op, rhs)
 }
 
-func (p *CPrinter) PrintSend(ch, value string) {
+func (p *ZigPrinter) PrintSend(ch, value string) {
 	p.PrintLevel(SEMI, fmt.Sprintf("%s.Send(%s)", ch, value))
 }
 
-func (p *CPrinter) FormatIdent(id, itype string) (ret string) {
+func (p *ZigPrinter) FormatIdent(id, itype string) (ret string) {
 	switch id {
 	case NIL:
-		return NULLP
+		return NULL
 
 	case IOTA:
 		ret = strconv.Itoa(p.ctx.iota_count)
 		p.ctx.iota_count += 1
 
 	case "string":
-		ret = "std::string"
+		return "[]const u8"
 
 	case "_":
-		ret = "std::ignore"
+		return "_"
 
-	case "float64":
-		ret = "double"
+	case "int8":
+		return "i8"
 
-	case "float32":
-		ret = "float"
+	case "int16":
+		return "i16"
+
+	case "int32", "int":
+		return "i32"
 
 	case "int64":
-		return "long long"
+		return "i64"
 
-	case "int32":
-		return "int"
+	case "uint8":
+		return "u8"
+
+	case "uint16":
+		return "u16"
+
+	case "uint32", "uint":
+		return "u32"
+
+	case "uint64":
+		return "u64"
+
+	case "float32":
+		return "f32"
+
+	case "float64":
+		return "f64"
 
 	default:
-		ret = id
+		return id
 	}
 
 	return
 }
 
-func (p *CPrinter) FormatLiteral(lit string) string {
+func (p *ZigPrinter) FormatLiteral(lit string) string {
 	if len(lit) == 0 {
 		return lit
 	}
@@ -445,23 +463,23 @@ func (p *CPrinter) FormatLiteral(lit string) string {
 	return lit
 }
 
-func (p *CPrinter) FormatCompositeLit(typedef, elt string) string {
+func (p *ZigPrinter) FormatCompositeLit(typedef, elt string) string {
 	return fmt.Sprintf("%s{%s}", typedef, elt)
 }
 
-func (p *CPrinter) FormatEllipsis(expr string) string {
+func (p *ZigPrinter) FormatEllipsis(expr string) string {
 	return fmt.Sprintf("...%s", expr)
 }
 
-func (p *CPrinter) FormatStar(expr string) string {
+func (p *ZigPrinter) FormatStar(expr string) string {
 	return "*" + expr
 }
 
-func (p *CPrinter) FormatParen(expr string) string {
+func (p *ZigPrinter) FormatParen(expr string) string {
 	return fmt.Sprintf("(%s)", expr)
 }
 
-func (p *CPrinter) FormatUnary(op, operand string) string {
+func (p *ZigPrinter) FormatUnary(op, operand string) string {
 	if op == "<-" {
 		return fmt.Sprintf("%s.Receive()", operand)
 	}
@@ -469,7 +487,7 @@ func (p *CPrinter) FormatUnary(op, operand string) string {
 	return fmt.Sprintf("%s%s", op, operand)
 }
 
-func (p *CPrinter) FormatBinary(lhs, op, rhs string) string {
+func (p *ZigPrinter) FormatBinary(lhs, op, rhs string) string {
 	if op == "&^" {
 		// AND NOT
 		op = "&"
@@ -478,7 +496,7 @@ func (p *CPrinter) FormatBinary(lhs, op, rhs string) string {
 	return fmt.Sprintf("%s %s %s", lhs, op, rhs)
 }
 
-func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
+func (p *ZigPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 	name, value := v.Name(), v.Value()
 
 	if strings.HasSuffix(value, "]") {
@@ -518,9 +536,9 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 	} else if t == PARAM && strings.Contains(value, "%s") {
 		ret = fmt.Sprintf(value, name)
 	} else if t == FIELD && len(name) == 0 {
-		ret = SplitAny(value, "<[")[0] + " " + value
+		ret = getIdentifier(value) + " " + value
 	} else if len(name) > 0 && len(value) > 0 {
-		ret = value + " " + name
+		ret = name + ": " + value
 	} else {
 		ret = value + name
 	}
@@ -534,23 +552,23 @@ func (p *CPrinter) FormatPair(v Pair, t FieldType) (ret string) {
 	return
 }
 
-func (p *CPrinter) FormatArray(alen, elt string) string {
+func (p *ZigPrinter) FormatArray(alen, elt string) string {
 	if alen == "" { // slice
-		return fmt.Sprintf("std::vector<%v>", elt)
+		return fmt.Sprintf("[]%v", elt)
 	} else {
 		return fmt.Sprintf("%s[%s]", elt, alen)
 	}
 }
 
-func (p *CPrinter) FormatArrayIndex(array, index, rtype string) string {
+func (p *ZigPrinter) FormatArrayIndex(array, index, rtype string) string {
 	return fmt.Sprintf("%s[%s]", array, index)
 }
 
-func (p *CPrinter) FormatMapIndex(array, index, rtype string, check bool) string {
+func (p *ZigPrinter) FormatMapIndex(array, index, rtype string, check bool) string {
 	return fmt.Sprintf("%s[%s]", array, index)
 }
 
-func (p *CPrinter) FormatSlice(slice, low, high, max string) string {
+func (p *ZigPrinter) FormatSlice(slice, low, high, max string) string {
 	if max == "" {
 		return fmt.Sprintf("%s[%s:%s]", slice, low, high)
 	} else {
@@ -558,11 +576,11 @@ func (p *CPrinter) FormatSlice(slice, low, high, max string) string {
 	}
 }
 
-func (p *CPrinter) FormatMap(key, elt string) string {
+func (p *ZigPrinter) FormatMap(key, elt string) string {
 	return fmt.Sprintf("std::map<%s, %s>", key, elt)
 }
 
-func (p *CPrinter) FormatKeyValue(key, value string, isMap bool) string {
+func (p *ZigPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	if isMap {
 		return fmt.Sprintf("{%s, %s}", key, value)
 	}
@@ -571,7 +589,7 @@ func (p *CPrinter) FormatKeyValue(key, value string, isMap bool) string {
 	return fmt.Sprintf(".%s=%s", key, value)
 }
 
-func (p *CPrinter) FormatStruct(name, fields string) string {
+func (p *ZigPrinter) FormatStruct(name, fields string) string {
 	if len(fields) > 0 {
 		return fmt.Sprintf("struct _%s {\n%s}", name, fields)
 	} else {
@@ -579,7 +597,7 @@ func (p *CPrinter) FormatStruct(name, fields string) string {
 	}
 }
 
-func (p *CPrinter) FormatInterface(name, methods string) string {
+func (p *ZigPrinter) FormatInterface(name, methods string) string {
 	if len(methods) > 0 {
 		name = "_" + name
 		return fmt.Sprintf("/* abstract */ struct %s {\n ~%s(){};\n%s}", name, name, methods)
@@ -588,7 +606,7 @@ func (p *CPrinter) FormatInterface(name, methods string) string {
 	}
 }
 
-func (p *CPrinter) FormatChan(chdir, mtype string) string {
+func (p *ZigPrinter) FormatChan(chdir, mtype string) string {
 	var chtype string
 
 	switch chdir {
@@ -603,7 +621,7 @@ func (p *CPrinter) FormatChan(chdir, mtype string) string {
 	return fmt.Sprintf("%s<%s>", chtype, mtype)
 }
 
-func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
+func (p *ZigPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 	if strings.HasPrefix(fun, "time::") {
 		// need to rename, to avoid conflicts with C/C++ "time" :(
 		fun = "go_" + fun
@@ -615,13 +633,13 @@ func (p *CPrinter) FormatCall(fun, args string, isFuncLit bool) string {
 		return fmt.Sprintf("%v.size()", args)
 
 		//} else if fun == "make" {
-		//	return cFormatMake(args)
+		//	return FormatMake(args)
 	} else {
 		return fmt.Sprintf("%s(%s)", fun, args)
 	}
 }
 
-func (p *CPrinter) FormatFuncType(params, results string, withFunc bool) string {
+func (p *ZigPrinter) FormatFuncType(params, results string, withFunc bool) string {
 	if len(results) == 0 {
 		results = "void"
 	} else if IsMultiValue(results) {
@@ -632,11 +650,11 @@ func (p *CPrinter) FormatFuncType(params, results string, withFunc bool) string 
 	return fmt.Sprintf("%s %%s(%s)", results, params)
 }
 
-func (p *CPrinter) FormatFuncLit(ftype, body string) string {
+func (p *ZigPrinter) FormatFuncLit(ftype, body string) string {
 	return fmt.Sprintf(ftype+"%s", "", body)
 }
 
-func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {
+func (p *ZigPrinter) FormatSelector(pname, sel string, isObject bool) string {
 	switch {
 	case pname == "io" && sel == "ReadSeeker":
 		pname = "std"
@@ -674,7 +692,7 @@ func (p *CPrinter) FormatSelector(pname, sel string, isObject bool) string {
 	}
 }
 
-func (p *CPrinter) FormatTypeAssert(orig, assert string) string {
+func (p *ZigPrinter) FormatTypeAssert(orig, assert string) string {
 	if assert == "type" {
 		p.ctx.caseType = orig
 		return ""
@@ -684,8 +702,8 @@ func (p *CPrinter) FormatTypeAssert(orig, assert string) string {
 }
 
 // Guess type and return type and new value
-func cGuessType(value string) (string, string) {
-	vtype := "auto"
+func zGuessType(value string) (string, string) {
+	vtype := ""
 
 	//
 	// no value ?
@@ -701,13 +719,13 @@ func cGuessType(value string) (string, string) {
 	case '\'':
 		return "char", value
 	case '"':
-		return "std::string", value
+		return "[]const u8", value
 
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.':
 		if strings.Contains(value, ".") || strings.Contains(value, "E") {
-			return "double", value
+			return "f64", value
 		}
-		return "int", value
+		return "i32", value
 	}
 
 	//
@@ -720,7 +738,7 @@ func cGuessType(value string) (string, string) {
 		//
 		// null values
 		//
-	case NIL, NULLP:
+	case NIL, NULL:
 		return "void*", value
 	}
 
@@ -751,7 +769,7 @@ func cGuessType(value string) (string, string) {
 		case '[':
 			// should be an array
 			if p, ok := FindMatch(value, '[', ']'); ok {
-				t, _ := cGuessType(value[i+1 : p])
+				t, _ := zGuessType(value[i+1 : p])
 				return t, value
 			}
 
@@ -768,7 +786,7 @@ func cGuessType(value string) (string, string) {
 	return vtype, value
 }
 
-func cFormatMake(args string) string {
+func FormatMake(args string) string {
 	if strings.HasPrefix(args, "std::map<") {
 		// make map
 		p := strings.LastIndex(args, ">")
@@ -797,4 +815,14 @@ func cFormatMake(args string) string {
 
 		return fmt.Sprintf("%s(%s)", chandef, n)
 	}
+}
+
+func getIdentifier(s string) string {
+	for i, c := range s {
+		if c == '<' || c == '[' {
+			return s[0:i]
+		}
+	}
+
+	return s
 }

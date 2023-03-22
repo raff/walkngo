@@ -84,6 +84,10 @@ func main() {
 		p = &printer.CPrinter{}
 		*lang = "cc"
 
+	case "zig":
+		p = &printer.ZigPrinter{}
+		*lang = "zig"
+
 	case "go":
 		p = &printer.GoPrinter{}
 		*lang = "go"

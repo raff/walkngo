@@ -2,6 +2,7 @@ package printer
 
 import (
 	"io"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -42,6 +43,9 @@ const (
 	COLON   = ":\n"
 	COMMA   = ", "
 	COMMANL = ",\n"
+
+	NIL  = "nil"
+	IOTA = "iota"
 
 	DEFAULTCONTEXT ContextType = iota
 	GENCONTEXT
@@ -206,12 +210,51 @@ func IsPublic(name string) bool {
 	return unicode.IsUpper(first)
 }
 
+// IsMultiValue returns true if the expression is a list of comma separated values
+func IsMultiValue(expr string) bool {
+	return strings.Contains(expr, ",")
+}
+
 // IfTrue returns the input value if the condition is true, an empty string otherwise
 func IfTrue(val string, cond bool) (ret string) {
 	if cond {
 		return val
 	}
 	return
+}
+
+// FindMatch finds the matching closing character given the opening character.
+// used to find matching braces or parenthesis with support for nesting.
+// NOTE: this version does NOT not check if the closing character is inside quotes.
+func FindMatch(s string, left, right byte) (int, bool) {
+	var cnt int
+
+	open := strings.IndexByte(s, left)
+	if open < 0 {
+		return 0, false
+	}
+
+	for p := open; p < len(s); p++ {
+		if s[p] == left {
+			cnt++
+		} else if s[p] == right {
+			cnt--
+			if cnt == 0 {
+				return p, true
+			}
+		}
+	}
+
+	return 0, false
+}
+
+func SplitAny(s, seps string) []string {
+	i := strings.IndexAny(s, seps)
+	if i < 0 {
+		return []string{s}
+	}
+
+	return []string{s[:i], s[i:]}
 }
 
 func (c ContextType) String() string {
